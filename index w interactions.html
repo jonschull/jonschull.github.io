@@ -30,7 +30,7 @@
     from browser import document,html
     from browser.html import *
 
-    errorBox = DIV(ID='console')
+    errorBox = DIV(PRE(ID='console'))
     document<=errorBox
 
     import sys
@@ -54,9 +54,48 @@
 
 
     graphString = """
+    ID      1
+    LABEL   First item
+    URL     This is the hubURL
+    TITLE   This is popup text
+    it can be multiple lines
+    but don't go crazy
 
+    ID      1.1
+    LABEL   Second Item
+    URL     This is the URL
+    TITLE   This is popup text
+
+    ID      1.1.1
+    LABEL   This is what shows
+    URL     This is the URL
+    TITLE   This is popup text
+
+    ID      1.1.2
+    LABEL   These two are siblings
+    URL     This is the URL
+    TITLE   This is popup text
     """
 
+    keywords = 'ID LABEL URL TITLE'.split()
+
+    def getNodes(graphString=graphString):
+        items = graphString.strip().split('ID')
+        items = [item for item in items if item.strip()]
+        nodes=[] #a list of dicts
+        for item in items:
+            node = dict()
+            for i, line in enumerate(item.split('\n')):
+                if line.strip():
+                    if i == 0: line = 'ID ' + line
+                    firstWord = line.split()[0]
+                    if firstWord in keywords:
+                        node[firstWord] = line.replace(firstWord,'').strip()
+            nodes.append(node)
+        return(nodes)
+
+    for item in getNodes():
+        print(item)
 
     data = {'nodes':nodes, 'edges': edges}
 
