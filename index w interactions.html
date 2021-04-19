@@ -31,6 +31,7 @@
 <body onload="brython()">
     <script type="text/python">
     from browser import document,html,aio
+    from javascript import JSON
     from browser.html import *
 
     errorBox = DIV(PRE(ID='console'))
@@ -67,13 +68,12 @@
 
     ID      2
     LABEL   Second Item
-    URL     URL2
+    URL     https://hub.e-nable.org/enable/custom/wiki?id=366&output=html
     TITLE   This is popup text
     LINKTO  3
 
     ID      3
     LABEL   Another Second-level Item
-    URL     URL3
     TITLE   This is popup text
 
     """
@@ -129,8 +129,8 @@
             return edges
     nodes = getNodes()
     edges = getEdges(nodes)
-    print(nodes)
-    print(edges)
+    #print(nodes)
+    #print(edges)
 
 
 
@@ -152,7 +152,7 @@
     network = window.vis.Network.new(container, data, options)
 
     def networkClick(params):
-        print('networkClick', params.nodes)
+        #print('networkClick', params.nodes)
         ID=params.nodes[0]
         URL = [node['url'] for node in nodes if node['id'] == ID][0]
         document['LEFT'].html = URL;
@@ -161,7 +161,8 @@
     async def showFile(src):
         # Text file
         req = await aio.ajax("GET", src)
-        document['LEFT'].html = req.data
+        content = JSON.parse(req.data)['content']
+        document['LEFT'].html = content
 
     network.on("click", networkClick);
 
