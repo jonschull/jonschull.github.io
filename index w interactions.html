@@ -12,6 +12,9 @@
         table,td,th{
             border: 1px solid black;
         }
+        td{
+            width:50%
+        }
         body {
             margin: 0;            /* Reset default margin */
         }
@@ -27,7 +30,7 @@
 </head>
 <body onload="brython()">
     <script type="text/python">
-    from browser import document,html
+    from browser import document,html,aio
     from browser.html import *
 
     errorBox = DIV(PRE(ID='console'))
@@ -56,7 +59,7 @@
     graphString = """
     ID      1
     LABEL   First item
-    URL     URL1
+    URL     testsource.html
     TITLE   This is popup text
             this can be multiple lines
             but don't go crazy
@@ -151,8 +154,14 @@
     def networkClick(params):
         print('networkClick', params.nodes)
         ID=params.nodes[0]
-        content = [node['url'] for node in nodes if node['id'] == ID][0]
-        document['LEFT'].html = content
+        URL = [node['url'] for node in nodes if node['id'] == ID][0]
+        document['LEFT'].html = URL;
+        aio.run(showFile(URL))
+
+    async def showFile(src):
+        # Text file
+        req = await aio.ajax("GET", src)
+        document['LEFT'].html = req.data
 
     network.on("click", networkClick);
 
