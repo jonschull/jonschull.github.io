@@ -56,27 +56,7 @@
 
     edges = [{'from':"1.1", 'to': 2}]
 
-
-    graphString = """
-    ID      1
-    LABEL   First item
-    URL     testsource.html
-    TITLE   This is popup text
-            this can be multiple lines
-            but don't go crazy
-    LINKTO  2 3
-
-    ID      2
-    LABEL   Second Item
-    URL     https://hub.e-nable.org/enable/custom/wiki?id=366&output=html
-    TITLE   This is popup text
-    LINKTO  3
-
-    ID      3
-    LABEL   Another Second-level Item
-    TITLE   This is popup text
-
-    """
+    graphString=open('graphstring.txt').read()
 
     keywords = 'ID LABEL URL TITLE LINKTO'.split()
 
