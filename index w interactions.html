@@ -34,29 +34,27 @@
     from javascript import JSON
     from browser.html import *
 
+    ### error box for print()
     errorBox = DIV(PRE(ID='console'))
     document<=errorBox
-
     import sys
     class MyOutput:
         def __init__(self):
             self.console = document["console"]
-
         def write(self, text):
             self.console.html +=  text + '</hr>'
-
     sys.stdout = MyOutput()
     sys.stderr = MyOutput()
 
     document <= TABLE(  TR( TH('Text')+ TH('Diagram')) +
-                        TR( TD('Text goes here!!!',ID='LEFT') + TR(DIV('goes here', id="mynetwork"))))
+                        TR( TD('Text goes here!!!',ID='LEFT', contenteditable='true') + TR(DIV('goes here', id="mynetwork"))))
 
     nodes =[dict(id="1.1", label='1'),
             dict(id=2, label='2')]
-
     edges = [{'from':"1.1", 'to': 2}]
 
     graphString=open('graphstring.txt').read()
+    document['LEFT'].html = '<pre>' + graphString + '</pre>'
 
     keywords = 'ID LABEL URL TITLE LINKTO'.split()
 
@@ -132,7 +130,7 @@
     network = window.vis.Network.new(container, data, options)
 
     def networkClick(params):
-        #print('networkClick', params.nodes)
+        print('networkClick', params.nodes)
         ID=params.nodes[0]
         URL = [node['url'] for node in nodes if node['id'] == ID][0]
         document['LEFT'].html = URL;
