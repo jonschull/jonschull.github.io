@@ -3,13 +3,13 @@ LABEL   First item
 TITLE   This is popup text
         this can be multiple lines
         but don't go crazy
+URL     noURL
 LINKTO  2 3
 
 ID      2
 URL     testsource.html
 LABEL   Second Item
 TITLE   This is popup text
-URL     testsource.html
 LINKTO  3
 
 ID      3
