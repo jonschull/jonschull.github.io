@@ -48,7 +48,10 @@
     sys.stderr = MyOutput()
 
     document <= TABLE(  TR( TH('Text')+ TH('Diagram')) +
-                        TR( TD('Text goes here!!!',ID='LEFT', contenteditable='true') + TR(DIV('goes here', id="mynetwork"))))
+                        TR( TD("""Try an URL like <br/>
+                        https://jonschull.github.io/loadFromQuery.html?367
+                        <br/>where 367 is the ID of your start page
+                        """,ID='LEFT', contenteditable='true') + TR(DIV('goes here', id="mynetwork"))))
 
     #JUST AN EXAMPLE
     graphString = """ID      1
