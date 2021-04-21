@@ -37,6 +37,7 @@
     ### error box for print()
     errorBox = DIV(PRE(ID='console'))
     document<=errorBox
+
     import sys
     class MyOutput:
         def __init__(self):
@@ -49,15 +50,25 @@
     document <= TABLE(  TR( TH('Text')+ TH('Diagram')) +
                         TR( TD('Text goes here!!!',ID='LEFT', contenteditable='true') + TR(DIV('goes here', id="mynetwork"))))
 
-    ### just an illustration. these are overridden
-    nodes =[dict(id="1.1", label='1'), dict(id=2, label='2')]
-    edges = [{'from':"1.1", 'to': 2}]
+    #JUST AN EXAMPLE
+    graphString = """ID      1
+    LABEL   First item
+    URL     testsource.html
+    TITLE   This is popup text
+            this can be multiple lines
+            but don't go crazy
+    LINKTO  2 3
 
+    ID      2
+    LABEL   Second Item
+    URL     https://hub.e-nable.org/enable/custom/wiki?id=366&output=html
+    TITLE   This is popup text
+    LINKTO  3
 
-    graphString=open('graphstring.txt').read() #this only works from server
-
-    document['LEFT'].html = '<pre>' + graphString + '</pre>'
-
+    ID      3
+    LABEL   Another Second-level Item
+    TITLE   This is popup text
+    """
 
     def getNodes(graphString=graphString):
         keywords = 'ID LABEL URL TITLE LINKTO'.split()
@@ -103,9 +114,6 @@
                                        'to': link})
             return edges
 
-    nodes = getNodes()
-    edges = getEdges(nodes)
-    data = {'nodes':nodes, 'edges': edges}
     options = { "physics":{"enabled":True
                           },
                 "layout":{  "improvedLayout": True},
@@ -117,7 +125,6 @@
                              }
                  };
 
-    network = window.vis.Network.new(document['mynetwork'], data, options)
 
     def networkClick(params): #bound via network.on below
         print('networkClick', params.nodes)
@@ -126,17 +133,32 @@
         document['LEFT'].html = URL; # for a moment,
         aio.run(showFile(URL))       # until this finishes
 
+    #initialize with dummy data
+    nodes =[dict(id=1, label='1'), dict(id=2, label='2')]
+    edges = [{'from':1, 'to': 2}]
+    data = {'nodes':nodes, 'edges': edges}
+    network = window.vis.Network.new(document['mynetwork'], data, options)
+    network.on("click", networkClick);
+
     async def showFile(src): #works locally and via server
         # Text file
         req = await aio.ajax("GET", src)
         content = JSON.parse(req.data)['content']
         document['LEFT'].html = content
+        graphString = 'ID' + '\nID'.join(document['LEFT'].text.split('ID')[1:])
+        #print(graphString)
+        nodes=getNodes(graphString)
+        edges = getEdges(nodes)
+        data = {'nodes':nodes, 'edges': edges}
+        network = window.vis.Network.new(document['mynetwork'], data, options)
+        network.on("click", networkClick);
 
-    network.on("click", networkClick);
 
-    # document.query
-    # is straightforward but to load the query as graphstring,
-    # I'll need to make an async main?
+    qURL=str(document.query).split('?=')[-1]
+    if qURL:
+        URL = f'https://hub.e-nable.org/enable/custom/wiki?id={qURL}&output=html'
+        aio.run(showFile(URL))       # until this finishes
+
 
     </script>
 
