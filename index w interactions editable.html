@@ -50,7 +50,8 @@
     sys.stderr = MyOutput()
     #1/0
 
-    from nodeStuff import getNodes, getEdges, options
+    from imports.nodeStuff import getNodes, getEdges, options
+    #https://brython.info/static_doc/en/file_or_http.html cant import from same directory
 
     ### just an illustration. these are overridden
     #nodes =[dict(id="1.1", label='1'), dict(id=2, label='2')]
