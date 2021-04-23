@@ -12,8 +12,16 @@
         table,td,th{
             border: 1px solid black;
         }
+        #LEFT{  font-size:10px;}
+        #console{height:40px;
+                 width:80%;
+                 resize:vertical;
+                 font-size:10px;
+                 overflow-y:scroll;
+                 display: flex;
+                 flex-direction: column-reverse;}
         td{
-            width:50%
+            width:50%;
         }
         body {
             margin: 0;            /* Reset default margin */
@@ -35,6 +43,18 @@
     from javascript import JSON
     from browser.html import *
 
+    #...index.html?filename=whatever
+    filename = document.query.getfirst('filename')
+    if not filename:
+        filename='graphString.txt'
+    if filename in storage:
+        graphString = storage[filename]
+        print('loaded', filename)
+    else: #save default graphString.txt as under filename
+        graphString=open('graphString.txt').read() #this only works from server
+        print('using default remote graphString.txt')
+
+
     ### error box for print()
     errorBox = DIV(PRE(ID='console',  contenteditable='true'))
     document<=errorBox
@@ -48,21 +68,6 @@
     sys.stderr = MyOutput()
     #1/0
 
-    print('Available files:\n', list(storage.keys()))
-
-
-    #...index.html?filename=whatever
-    filename = document.query.getfirst('filename')
-    if not filename:
-        filename='graphString.txt'
-    if filename in storage:
-        graphString = storage[filename]
-        print('loaded', filename)
-
-    else: #save default graphString.txt as under filename
-        graphString=open('graphString.txt').read() #this only works from server
-        print('using default remote graphString.txt')
-
     document <= TABLE(  TR( TH('Filename '
                                 + INPUT(filename, id='filename', value=filename)
                                 + BUTTON('Save', id='Save')
@@ -71,6 +76,9 @@
                             )+
                             TH('Diagram')) +
                         TR( TD('Text goes here!!!',ID='LEFT', contenteditable='true') + TR(DIV('goes here', id="mynetwork"))))
+
+    print('Available files:\n', list(storage.keys()))
+
 
     def loadFileName(ev):
         graphString = storage[filename]

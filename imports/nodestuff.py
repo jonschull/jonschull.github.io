@@ -37,7 +37,7 @@ options = { "physics":{"enabled":True
              };
 
 def getNodes(graphString=graphString):
-    keywords = 'ID LABEL URL TITLE LINKTO'.split()
+    keywords = 'ID LABEL URL TITLE LINKTO COLOR SHAPE FONT X Y'.split()
 
     goodLines = []
     for line in graphString.split('\n'):
