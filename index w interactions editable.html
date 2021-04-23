@@ -7,7 +7,7 @@
     <style type="text/css">
         #mynetwork {
             width: 100%;
-            height: 400px;
+            height:800px;
         }
         table,td,th{
             border: 1px solid black;
@@ -36,7 +36,7 @@
     from browser.html import *
 
     ### error box for print()
-    errorBox = DIV(PRE(ID='console'))
+    errorBox = DIV(PRE(ID='console',  contenteditable='true'))
     document<=errorBox
     import sys
     class MyOutput:
@@ -48,37 +48,42 @@
     sys.stderr = MyOutput()
     #1/0
 
-    print('available files')
-    [print(key) for key in storage.keys()]
-    print()
+    print('Available files:\n', list(storage.keys()))
+
 
     #...index.html?filename=whatever
     filename = document.query.getfirst('filename')
     if not filename:
         filename='graphString.txt'
-
     if filename in storage:
         graphString = storage[filename]
         print('loaded', filename)
-        #print('storage filename', storage[filename])
+
     else: #save default graphString.txt as under filename
         graphString=open('graphString.txt').read() #this only works from server
-        #print('LEFT', document['LEFT'].text)
-        #print('storing', filename, '\n', graphString)
-        #storage[filename] = graphString
-        #print('stored', filename)
+        print('using default remote graphString.txt')
 
-
-    document <= TABLE(  TR( TH('Filename '+ (INPUT(filename, id='filename', value=filename))+BUTTON('Save', id='Save'))+ TH('Diagram')) +
+    document <= TABLE(  TR( TH('Filename '
+                                + INPUT(filename, id='filename', value=filename)
+                                + BUTTON('Save', id='Save')
+                                + SPAN(id='status')
+                                + BUTTON('Load', id='Load')
+                            )+
+                            TH('Diagram')) +
                         TR( TD('Text goes here!!!',ID='LEFT', contenteditable='true') + TR(DIV('goes here', id="mynetwork"))))
+
+    def loadFileName(ev):
+        graphString = storage[filename]
+        document['status'].text = '  loaded'
+        document['LEFT'].html = '<pre>' + graphString + '</pre>'
+    document['Load'].bind('click', loadFileName)
+
 
     def saveFileName(ev):
         graphString=document['LEFT'].text
-        print( document['filename'].value, 'storing', filename, '\n', graphString)
         storage[filename] = graphString
-
-    btn = document['Save']
-    btn.bind('click', saveFileName)
+        document['status'].text = '  saved'
+    document['Save'].bind('click', saveFileName)
 
     from imports.nodeStuff import getNodes, getEdges, options
     #https://brython.info/static_doc/en/file_or_http.html cant import from same directory
@@ -119,7 +124,7 @@
 
     LEFT = document['LEFT']
     def onEdit(ev):
-        #print('edited!')
+        document['status'].text = 'changed'
         graphString = document['LEFT'].text
         #graphString = augment(graphString)
         nodes, edges, data, network = refreshGraph(graphString)

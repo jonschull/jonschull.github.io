@@ -21,7 +21,13 @@ URL     testsource.html
 """
 options = { "physics":{"enabled":True
                       },
-            "layout":{  "improvedLayout": True},
+            "autoResize": True,
+            "layout":{  "improvedLayout": True, "hierarchical":{
+                                          "enabled": True,
+                                          "direction": 'LR',
+                                          "sortMethod": "directed",
+                                          "nodeSpacing":5,
+                                          "treeSpacing":5}},
                 "edges":{"smooth": True,
                          "arrows":{"to":True}
                          },
@@ -50,7 +56,7 @@ def getNodes(graphString=graphString):
             chunk=chunk.replace('\n'+ keyword,'BREAK'+ keyword)
         lines=chunk.split('BREAK')
         records.append([line.strip() for line in lines if line.strip()])
-    
+
 
     # convert records into nodes
     nodes = []
