@@ -30,12 +30,10 @@
 </head>
 <body onload="brython()">
     <script type="text/python">
-    from browser import document,html,aio, window
+    from browser import document, html, aio, window
+    from browser.local_storage import storage
     from javascript import JSON
     from browser.html import *
-
-    document <= TABLE(  TR( TH('Text')+ TH('Diagram')) +
-                        TR( TD('Text goes here!!!',ID='LEFT', contenteditable='true') + TR(DIV('goes here', id="mynetwork"))))
 
     ### error box for print()
     errorBox = DIV(PRE(ID='console'))
@@ -50,14 +48,45 @@
     sys.stderr = MyOutput()
     #1/0
 
+    print('available files')
+    [print(key) for key in storage.keys()]
+    print()
+
+    #...index.html?filename=whatever
+    filename = document.query.getfirst('filename')
+    if not filename:
+        filename='graphString.txt'
+
+    if filename in storage:
+        graphString = storage[filename]
+        print('loaded', filename)
+        #print('storage filename', storage[filename])
+    else: #save default graphString.txt as under filename
+        graphString=open('graphString.txt').read() #this only works from server
+        #print('LEFT', document['LEFT'].text)
+        #print('storing', filename, '\n', graphString)
+        #storage[filename] = graphString
+        #print('stored', filename)
+
+
+    document <= TABLE(  TR( TH('Filename '+ (INPUT(filename, id='filename', value=filename))+BUTTON('Save', id='Save'))+ TH('Diagram')) +
+                        TR( TD('Text goes here!!!',ID='LEFT', contenteditable='true') + TR(DIV('goes here', id="mynetwork"))))
+
+    def saveFileName(ev):
+        graphString=document['LEFT'].text
+        print( document['filename'].value, 'storing', filename, '\n', graphString)
+        storage[filename] = graphString
+
+    btn = document['Save']
+    btn.bind('click', saveFileName)
+
     from imports.nodeStuff import getNodes, getEdges, options
     #https://brython.info/static_doc/en/file_or_http.html cant import from same directory
-
     ### just an illustration. these are overridden
     #nodes =[dict(id="1.1", label='1'), dict(id=2, label='2')]
     #edges = [{'from':"1.1", 'to': 2}]
 
-    graphString=open('graphstring.txt').read() #this only works from server
+
     document['LEFT'].html = '<pre>' + graphString + '</pre>'
 
     def refreshGraph(graphString):
@@ -74,6 +103,7 @@
         if params.nodes:
             ID=params.nodes[0]
             URL = [node['url'] for node in nodes if node['id'] == ID][0]
+            print('URL', URL)
             if URL:
                 document['LEFT'].html = URL; # for a moment,
                 aio.run(showFile(URL))       # until this finishes
@@ -91,9 +121,10 @@
     def onEdit(ev):
         #print('edited!')
         graphString = document['LEFT'].text
+        #graphString = augment(graphString)
         nodes, edges, data, network = refreshGraph(graphString)
-        network.on("click", networkClick);
-        [print(node) for node in nodes]
+        network.on("click", networkClick)  #rebuilt network, so rebuild click
+        document['console'].text = '\n'.join([str(node) for node in nodes])
 
     LEFT.bind('input',onEdit)
 

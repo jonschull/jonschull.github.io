@@ -50,6 +50,7 @@ def getNodes(graphString=graphString):
             chunk=chunk.replace('\n'+ keyword,'BREAK'+ keyword)
         lines=chunk.split('BREAK')
         records.append([line.strip() for line in lines if line.strip()])
+    
 
     # convert records into nodes
     nodes = []
