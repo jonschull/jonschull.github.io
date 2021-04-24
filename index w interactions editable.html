@@ -38,7 +38,7 @@
 </head>
 <body onload="brython()">
     <script type="text/python">
-    from browser import document, html, aio, window
+    from browser import document, html, aio, window, load
     from browser.local_storage import storage
     from javascript import JSON
     from browser.html import *
@@ -68,6 +68,7 @@
     sys.stderr = MyOutput()
     #1/0
 
+
     document <= TABLE(  TR( TH('Filename '
                                 + INPUT(filename, id='filename', value=filename)
                                 + BUTTON('Save', id='Save')
@@ -77,13 +78,16 @@
                             TH('Diagram')) +
                         TR( TD('Text goes here!!!',ID='LEFT', contenteditable='true') + TR(DIV('goes here', id="mynetwork"))))
 
+
     print('Available files:\n', list(storage.keys()))
 
-
     def loadFileName(ev):
+        filename = document['filename'].value
         graphString = storage[filename]
-        document['status'].text = '  loaded'
         document['LEFT'].html = '<pre>' + graphString + '</pre>'
+        document['status'].text = '  loaded'
+        print('UNFIXED BUG: edit the left panel to see graph')
+
     document['Load'].bind('click', loadFileName)
 
 
@@ -134,11 +138,9 @@
     def onEdit(ev):
         document['status'].text = 'changed'
         graphString = document['LEFT'].text
-        #graphString = augment(graphString)
         nodes, edges, data, network = refreshGraph(graphString)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
         document['console'].text = '\n'.join([str(node) for node in nodes])
-
     LEFT.bind('input',onEdit)
 
     network.on("click", networkClick);
