@@ -38,8 +38,9 @@ options = { "physics":{"enabled":True
 
 def getNodes(graphString=graphString):
     keywords = 'ID LABEL URL TITLE LINKTO COLOR SHAPE FONT NODES EDGES'.split()
-
+    print()
     goodLines = []
+    graphString = graphString.replace(chr(11),'\n')
     for line in graphString.split('\n'):
         line=line.strip()
         if line.strip():             #keep non-blank lines
@@ -108,12 +109,12 @@ def dataAndOptions(graphString= test):
         if optionWord:
             optionKey=optionWord.pop()
             newOptions.append(node)
-            print('\noptionKey',optionKey, node)
+            #print('\noptionKey',optionKey, node)
         else:
             nodes.append(node)
 
 
-    print('\nnewOptions', newOptions)
+    #print('\nnewOptions', newOptions)
     edges=getEdges(nodes)
     data={'nodes':nodes, 'edges': edges}
     return data, options
