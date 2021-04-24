@@ -80,3 +80,40 @@ def getEdges(nodes):
                     edges.append({'from':node['id'],
                                    'to': link})
         return edges
+
+test= """NODES
+COLOR red
+
+
+ID 0
+LABEL
+LINKTO 1 8
+
+ID 1
+LABEL HOW
+THIS
+WORKS
+COLOR lime
+SHAPE circle
+FONT 22
+LINKTO 1b 2 3
+"""
+def dataAndOptions(graphString= test):
+    nodesWithOptions = getNodes(graphString)
+    optionWords = set('nodes edges'.split())
+
+    nodes=[]; newOptions = []
+    for i, node in enumerate(nodesWithOptions):
+        optionWord = set(node.keys()).intersection(optionWords)
+        if optionWord:
+            optionKey=optionWord.pop()
+            newOptions.append(node)
+            print('\noptionKey',optionKey, node)
+        else:
+            nodes.append(node)
+
+
+    print('\nnewOptions', newOptions)
+    edges=getEdges(nodes)
+    data={'nodes':nodes, 'edges': edges}
+    return data, options

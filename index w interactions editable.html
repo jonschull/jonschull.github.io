@@ -13,9 +13,9 @@
             border: 1px solid black;
         }
         #LEFT{  font-size:10px;}
-        #console{height:40px;
+        #console{height:200px;
                  width:80%;
-                 resize:vertical;
+                 resize:both;
                  font-size:10px;
                  overflow-y:scroll;
                  display: flex;
@@ -68,7 +68,6 @@
     sys.stderr = MyOutput()
     #1/0
 
-
     document <= TABLE(  TR( TH('Filename '
                                 + INPUT(filename, id='filename', value=filename)
                                 + BUTTON('Save', id='Save')
@@ -97,7 +96,7 @@
         document['status'].text = '  saved'
     document['Save'].bind('click', saveFileName)
 
-    from imports.nodeStuff import getNodes, getEdges, options
+    from imports.nodeStuff import dataAndOptions
     #https://brython.info/static_doc/en/file_or_http.html cant import from same directory
     ### just an illustration. these are overridden
     #nodes =[dict(id="1.1", label='1'), dict(id=2, label='2')]
@@ -107,13 +106,11 @@
     document['LEFT'].html = '<pre>' + graphString + '</pre>'
 
     def refreshGraph(graphString):
-        nodes = getNodes(graphString)
-        edges = getEdges(nodes)
-        data = {'nodes':nodes, 'edges': edges}
+        data, options = dataAndOptions(graphString)
         network = window.vis.Network.new(document['mynetwork'], data, options)
-        return (nodes, edges, data, network)
+        return (data, options, network)
 
-    nodes, edges, data, network = refreshGraph(graphString)
+    data, options, network = refreshGraph(graphString)
 
     def networkClick(params): #bound via network.on below
         print('networkClick', params.nodes)
@@ -138,9 +135,10 @@
     def onEdit(ev):
         document['status'].text = 'changed'
         graphString = document['LEFT'].text
-        nodes, edges, data, network = refreshGraph(graphString)
+        data, options, network = refreshGraph(graphString)
+        nodes = data['nodes']
         network.on("click", networkClick)  #rebuilt network, so rebuild click
-        document['console'].text = '\n'.join([str(node) for node in nodes])
+        #document['console'].text = '\n'.join([str(node) for node in nodes])
     LEFT.bind('input',onEdit)
 
     network.on("click", networkClick);
