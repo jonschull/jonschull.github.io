@@ -10,20 +10,26 @@
             height:800px;
         }
         table,td,th{
+            table-layout:fixed;
+            overflow-x:hidden
             border: 1px solid black;
         }
-        #SHORTHANDS{width:20%}
-        #LEFT{      width:30%;
-                font-size:10px;}
+        #SHORTHANDS, #LEFT{width:20%;
+                    white-space:nowrap;
+                    overflow:hidden;
+                    font-size:10px; }
+
         #console{height:200px;
-                 width:80%;
+                 width:90%;
                  resize:both;
                  font-size:10px;
                  overflow-y:scroll;
                  display: flex;
                  flex-direction: column-reverse;}
         td{
-            width:50%;
+            width:200px;
+            min-width:200px;
+            max-width:200px;
         }
         body {
             margin: 0;            /* Reset default margin */
@@ -140,8 +146,8 @@
 
     network.on("click", networkClick);
 
+    IDs = list(range(1,200))
     def onShortHands(ev):
-        IDs = list(range(1,200))
         shortStrings= document['SHORTHANDS'].text
         #print('*'*10 + '\n'+ shortStrings)
         lines=shortStrings.split('\n')
@@ -155,7 +161,7 @@
                 line, linkto = line.split(':')
             else:
                 linkto=''
-                
+
             words = line.split(' ')
             if len(words) == 1:
                 lineID = words[0]
@@ -165,6 +171,7 @@
 
             newLines.append(f'ID    {lineID}\nLABEL {line}\nLINKTO  {linkto}')
         document['LEFT'].html = '<pre>'+ '\n\n'.join(newLines) + '</pre>'
+        onEdit(ev)
 
     document['SHORTHANDS'].bind('input', onShortHands)
 
