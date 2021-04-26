@@ -65,8 +65,7 @@
 
 
     ### error box for print()
-    errorBox = DIV(PRE(ID='console',  contenteditable='true'))
-    document<=errorBox
+    document <= DIV(PRE(ID='console',  contenteditable='true'))
     import sys
     class MyOutput:
         def __init__(self):
@@ -92,7 +91,7 @@
     print('Available files:\n', list(storage.keys()))
 
     def fillLEFT(src):
-        document['LEFT'].html = '<pre>' + src + '</pre>'
+        document['LEFT'].html = '<br>'.join(src.split('\n'))
 
     def loadFileName(ev):
         global filename
@@ -100,7 +99,7 @@
         graphString = storage[filename]
         fillLEFT(graphString)
         document['status'].text = '  loaded'
-        print('UNFIXED BUG: edit the left panel to see graph')
+        onEdit(ev)
 
     document['Load'].bind('click', loadFileName)
 
@@ -149,7 +148,7 @@
         data, options, network = refreshGraph(graphString)
         nodes = data['nodes']
         network.on("click", networkClick)  #rebuilt network, so rebuild click
-        document['console'].text = '\n'.join([str(node) for node in nodes])
+        print('\n\n\n\n' + '\n'.join([str(node) for node in nodes]))
     document['LEFT'].bind('input',onEdit)
 
     network.on("click", networkClick);
@@ -178,8 +177,6 @@
 
 
             newLines.append(f'ID    {lineID}\nLABEL {line}\nLINKTO  {linkto}')
-        #document['LEFT'].html = '<pre>'+ '\n\n'.join(newLines) + '</pre>'
-        print('NEWLINES', newLines)
         fillLEFT('\n\n'.join(newLines))
         onEdit(ev)
 
