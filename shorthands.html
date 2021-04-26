@@ -52,6 +52,7 @@
     from browser.html import *
 
     #...index.html?filename=whatever
+
     filename = document.query.getfirst('filename')
     if not filename:
         filename='graphString.txt'
@@ -90,10 +91,14 @@
 
     print('Available files:\n', list(storage.keys()))
 
+    def fillLEFT(src):
+        document['LEFT'].html = '<pre>' + src + '</pre>'
+
     def loadFileName(ev):
+        global filename
         filename = document['filename'].value
         graphString = storage[filename]
-        document['LEFT'].html = '<pre>' + graphString + '</pre>'
+        fillLEFT(graphString)
         document['status'].text = '  loaded'
         print('UNFIXED BUG: edit the left panel to see graph')
 
@@ -101,6 +106,8 @@
 
 
     def saveFileName(ev):
+        global filename
+        filename = document['filename'].value
         graphString=document['LEFT'].text
         storage[filename] = graphString
         document['status'].text = '  saved'
@@ -108,7 +115,7 @@
 
     from imports.nodeStuff import dataAndOptions
 
-    document['LEFT'].html = '<pre>' + graphString + '</pre>'
+    fillLEFT(graphString)
 
     def refreshGraph(graphString):
         data, options = dataAndOptions(graphString)
@@ -133,7 +140,8 @@
         print(src, req.statusText)
         if req.statusText == 'OK':
             content = JSON.parse(req.data)['content']
-            document['LEFT'].html = content
+            #document['LEFT'].html = content
+            fillLEFT(content)
 
     def onEdit(ev):
         document['status'].text = 'changed'
@@ -170,7 +178,9 @@
 
 
             newLines.append(f'ID    {lineID}\nLABEL {line}\nLINKTO  {linkto}')
-        document['LEFT'].html = '<pre>'+ '\n\n'.join(newLines) + '</pre>'
+        #document['LEFT'].html = '<pre>'+ '\n\n'.join(newLines) + '</pre>'
+        print('NEWLINES', newLines)
+        fillLEFT('\n\n'.join(newLines))
         onEdit(ev)
 
     document['SHORTHANDS'].bind('input', onShortHands)
