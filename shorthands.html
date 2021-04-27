@@ -51,8 +51,8 @@
     from javascript import JSON
     from browser.html import *
 
+    #filename and graphString are GLOBAL
     #...index.html?filename=whatever
-
     filename = document.query.getfirst('filename')
     if not filename:
         filename='graphString.txt'
@@ -64,7 +64,7 @@
         print('using default remote graphString.txt')
 
 
-    ### error box for print()
+    ### print and errors will go to console (unless Brython fails)
     document <= DIV(PRE(ID='console',  contenteditable='true'))
     import sys
     class MyOutput:
@@ -74,7 +74,6 @@
             self.console.html +=  text + '</hr>'
     sys.stdout = MyOutput()
     sys.stderr = MyOutput()
-    #1/0
 
     document <= TABLE(  TR( TH('ShortHands')
                             +TH('Filename '
@@ -86,7 +85,6 @@
                         +TR (TD('Shorthands!!!',ID='SHORTHANDS', contenteditable='true')
                             +TD('Text goes here!!!',ID='LEFT', contenteditable='true')
                             +TD(DIV('goes here', id="mynetwork"))))
-
 
     print('Available files:\n', list(storage.keys()))
 
@@ -100,7 +98,6 @@
         fillLEFT(graphString)
         document['status'].text = '  loaded'
         onEdit(ev)
-
     document['Load'].bind('click', loadFileName)
 
 
@@ -142,6 +139,7 @@
             #document['LEFT'].html = content
             fillLEFT(content)
 
+
     def onEdit(ev):
         document['status'].text = 'changed'
         graphString = document['LEFT'].text
@@ -149,6 +147,7 @@
         nodes = data['nodes']
         network.on("click", networkClick)  #rebuilt network, so rebuild click
         print('\n\n\n\n' + '\n'.join([str(node) for node in nodes]))
+        rewriteShorthands(nodes)
     document['LEFT'].bind('input',onEdit)
 
     network.on("click", networkClick);
@@ -160,9 +159,13 @@
         lines=shortStrings.split('\n')
         lines=[line.strip() for line in lines if line ]
         newLines = []
+        fromNodes = []
+        toNodes   = []
 
         #use IDs for multi-word lines
         for line in lines:
+            if '/' in line:
+                line, addenda = line.split('/')
 
             if ':' in line:
                 line, linkto = line.split(':')
@@ -175,8 +178,18 @@
             else:
                 lineID = IDs.pop(0)
 
+            fromNodes.append(lineID)
+            for node in linkto.split():
+                toNodes.append(node)
 
             newLines.append(f'ID    {lineID}\nLABEL {line}\nLINKTO  {linkto}')
+
+        if toNodes:
+            for toNode in toNodes:
+                if toNode not in fromNodes:
+                    newLines.append(f'ID    {toNode}\nLABEL {toNode}\nLINKTO')
+                    fromNodes.append(toNode) #fix special case of a:b c, b:d, c:d
+        print(newLines)
         fillLEFT('\n\n'.join(newLines))
         onEdit(ev)
 
