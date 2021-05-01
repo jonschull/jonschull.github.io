@@ -1,0 +1,252 @@
+<html>
+<head>
+    <script type="text/javascript"  src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script type="text/javascript"  src="https://cdn.jsdelivr.net/npm/brython@3.9.0/brython.min.js">     </script>
+    <script type="text/javascript"  src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.8/brython_stdlib.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js" type="text/javascript" charset="utf-8"></script>
+    <style type="text/css">
+        #editor {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+
+        #mynetwork {
+            width: 100%;
+            height:700px;
+        }
+        table,td,th{
+            table-layout:fixed;
+            overflow-x:hidden
+            border: 1px solid black;
+        }
+        #SHORTHANDS, #LEFT{width:20%;
+                    white-space:nowrap;
+                    overflow:hidden;
+                    font-family: 'Courier New', monospace;
+                    font-weight: bold;
+                    font-size:10px; }
+
+        #console{height:200px;
+                 width:90%;
+                 resize:both;
+                 font-size:10px;
+                 overflow-y:scroll;
+                 display: flex;
+                 flex-direction: column-reverse;}
+        td{
+            width:200px;
+            min-width:200px;
+            max-width:200px;
+        }
+        body {
+            margin: 0;            /* Reset default margin */
+        }
+        iframe {
+            display: block;       /* iframes are inline by default */
+            background: #000;
+            border: none;         /* Reset default border */
+            height: 100vh;        /* Viewport-relative units */
+            width: 100vw;
+        }
+    </style>
+
+</head>
+<body onload="brython()">
+    <script type="text/python">
+    from browser import document, html, aio, window, load
+    from browser.local_storage import storage
+    from javascript import JSON
+    from browser.html import *
+
+    #filename and graphString are GLOBAL
+    #...index.html?filename=whatever
+    filename = document.query.getfirst('filename')
+    if not filename:
+        filename='graphString.txt'
+    if filename in storage:
+        graphString = storage[filename]
+        print('loaded', filename)
+    else: #save default graphString.txt as under filename
+        graphString=open('graphString.txt').read() #this only works from server
+        print('using default remote graphString.txt')
+
+
+    ### print and errors will go to console (unless Brython fails)
+    document <= DIV(PRE(ID='console',  contenteditable='true'))
+    import sys
+    class MyOutput:
+        def __init__(self):
+            self.console = document["console"]
+        def write(self, text):
+            self.console.html +=  text + '</hr>'
+    sys.stdout = MyOutput()
+    sys.stderr = MyOutput()
+
+    document <= TABLE(  TR( TH('ShortHands')
+                            +TH('Filename '
+                                + INPUT(filename, id='filename', value=filename)
+                                + BUTTON('Save', id='Save')
+                                + SPAN(id='status')
+                                + BUTTON('Load', id='Load') )
+                            +TH('Diagram'))
+                        +TR (TD('Shorthands!!!',ID='SHORTHANDS', contenteditable='true')
+                            +TD('Text goes here!!!',ID='LEFT', contenteditable='true')
+                            +TD(DIV('goes here', id="mynetwork"))))
+
+    window.ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/');
+    editor = window.ace.edit("SHORTHANDS");
+    editor.setOptions({
+            'showLineNumbers':False}
+        )
+    editor.session.setMode("ace/mode/yaml");
+
+
+    print('Available files:\n', list(storage.keys()))
+
+    def fillLEFT(src):
+        document['LEFT'].html = '<br>'.join(src.split('\n'))
+
+    def loadFileName(ev):
+        global filename
+        filename = document['filename'].value
+        graphString = storage[filename]
+        fillLEFT(graphString)
+        document['status'].text = '  loaded'
+        onEdit(ev)
+    document['Load'].bind('click', loadFileName)
+
+
+    def saveFileName(ev):
+        global filename
+        filename = document['filename'].value
+        graphString=document['LEFT'].text
+        storage[filename] = graphString
+        document['status'].text = '  saved'
+    document['Save'].bind('click', saveFileName)
+
+    from imports.nodeStuff import dataAndOptions
+
+    fillLEFT(graphString)
+
+    def refreshGraph(graphString):
+        data, options = dataAndOptions(graphString)
+        network = window.vis.Network.new(document['mynetwork'], data, options)
+        return (data, options, network)
+
+    data, options, network = refreshGraph(graphString)
+
+    def networkClick(params): #bound via network.on below
+        print('networkClick', params.nodes)
+        if params.nodes:
+            ID=params.nodes[0]
+            URL = [node['url'] for node in nodes if node['id'] == ID][0]
+            print('URL', URL)
+            if URL:
+                document['LEFT'].html = URL; # for a moment,
+                aio.run(showFile(URL))       # until this finishes
+
+    async def showFile(src): #works locally and via server
+        # Text file
+        req = await aio.ajax("GET", src)
+        print(src, req.statusText)
+        if req.statusText == 'OK':
+            content = JSON.parse(req.data)['content']
+            #document['LEFT'].html = content
+            fillLEFT(content)
+
+    freshData = None
+    def onEdit(ev):
+        global freshData
+        document['status'].text = 'changed'
+        graphString = document['LEFT'].text
+        data, options, network = refreshGraph(graphString)
+        freshData = data
+        print(freshData)
+        #nodes = data['nodes']
+        network.on("click", networkClick)  #rebuilt network, so rebuild click
+
+    document['LEFT'].bind('input',onEdit)
+
+    network.on("click", networkClick);
+
+
+    def onShortHands(ev):
+        IDs = [str(i) for i in range(1000)][1:]
+        #document['SHORTHANDS'].unbind('input') #do not interrupt me with more typing
+        #shortStrings= document['SHORTHANDS'].text
+        shortStrings = editor.getValue()
+        print('*'*10 + '\n'+ shortStrings)
+        lines=shortStrings.split('\n')
+        lines=[line.strip() for line in lines if line ]
+        newLines = []
+        fromIDs = []
+        toIDs   = []
+
+        #use IDs for multi-word lines
+        for line in lines:
+            if '/' in line: #split off addenda
+                line, addenda = line[:line.find('/')], line[line.find('/')+1 :]
+            else:
+                addenda=''
+
+            if ':' in line: #split off linktos
+                line, linkto = line[:line.find(':')], line[line.find(':')+1 :]
+            else:
+                linkto=''
+
+            words = line.split(' ')
+            if len(words) == 1: #one word Labels become IDs
+                lineID = words[0]
+            else:
+                lineID = IDs.pop(0) #else assign an ID
+
+            fromIDs.append(lineID)
+            for ID in linkto.split():
+                if ID not in toIDs:
+                    toIDs.append(ID)
+            newLines.append(f'ID    {lineID}\nLABEL {line}\nLINKTO  {linkto}')
+
+        #create implicit nodes (mentioned as targets)
+        if toIDs:
+            for toID in toIDs:
+                if toID not in fromIDs:
+                    fromIDs.append(toID)
+                    newLines.append(f'ID    {toID}\nLABEL {toID}')
+
+        fillLEFT('\n\n'.join(newLines)) #newlines=mergeLeft(newLines)
+        onEdit(ev) #refresh LEFT pane
+
+    def redoShortHands(freshData):
+        s="a:b c d/extrastuff\nb:d/ more extrastuff"
+        lines=[]
+        nodes = freshData['nodes']
+        for node in nodes:
+            line = node['id']
+            if node['linkto']:
+                line+='   :' + node['linkto']
+            line+='/'
+            for k,v in node.items():
+                line+=k.upper()+ ' '+ node[k] + ' =~= '
+            lines.append(line)
+        print('redone:', '\n'.join(lines))
+
+        document['SHORTHANDS'].html = '</br>'.join(s.split('\n'))
+
+    def onShortClick(ev):
+        global freshData
+        if freshData:
+            #print('freshData', freshData)
+            #redoShortHands(freshData)
+            freshData=False
+            #{'nodes': [{'url': '', 'id': 'a', 'label': 'a', 'linkto': 'b'}, {'url': '', 'id': 'b', 'label': 'b', 'linkto': 'c'}, {'url': '', 'id': 'c', 'label': 'c', 'linkto': ''}], 'edges': [{'from': 'a', 'to': 'b'}, {'from': 'b', 'to': 'c'}]}
+
+    document['SHORTHANDS'].bind('input', onShortHands)
+    document['SHORTHANDS'].bind('click', onShortClick)
+
+    </script>
+
+</body>
+</html>
