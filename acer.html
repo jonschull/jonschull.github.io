@@ -174,7 +174,17 @@
 
     network.on("click", networkClick);
 
+    def niceRep(preNode):
+        return preNode
+        goodKeys='ID LINKTO ADDENDA'.split(' ')
+        ret=[]
+        for k,v in preNode.items():
+            ret.append(f'{k} {v}')
+        return '  /'.join(ret)
+
+
     from collections import OrderedDict
+    from uuid import uuid4
     def onShortHands(ev):
         IDs = [str(i) for i in range(1000)][1:]
         shortStrings = editor.getValue()
@@ -186,18 +196,18 @@
                             LINKTO=None,
                             ADDENDA=None,
                             PARENT=None,
+                            KEY=str(uuid4()),
                             LABEL=None,
                             RAW=line)
             preNodes.append(preNode)
 
         # compute parents
         for i in range(len(preNodes)):
-            preNodes[i]['PARENT'] = None
             my = preNodes[i]
             if i>0: #first guy has no parent
-                for j in range(i+1): # i-j goes upwards
+                for j in range(i+1):
                     if preNodes[i-j]['DEPTH'] < my['DEPTH']: #found parent
-                        preNodes[i]['PARENT'] = preNodes[i-j]['RAW'].strip()  #parents
+                        preNodes[i]['PARENT'] = preNodes[i-j]['KEY']  #parents
                         break #stop. We now know our parent
 
         #### HOW TO IDENTIFY PARENT, HOW TO ID
@@ -228,7 +238,7 @@
                 preNode['ADDENDA']=addenda.strip()
             if linkto:
                 preNode['LINKTO']= linkto
-            print(preNode)
+            print(niceRep(preNode))
 
 
 
