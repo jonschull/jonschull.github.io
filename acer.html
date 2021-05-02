@@ -174,33 +174,78 @@
 
     network.on("click", networkClick);
 
-
+    from collections import OrderedDict
     def onShortHands(ev):
         IDs = [str(i) for i in range(1000)][1:]
         shortStrings = editor.getValue()
         lines=shortStrings.split('\n')
-        preNodes = {}
+        preNodes = []
         for i,line in enumerate(lines):
-            preNode = dict(raw=line,
-                           depth = len(line) - len(line.lstrip()),
-                           ord=i,
-                           )
-            preNodes[i] = preNode
+            preNode = dict( ID=None,
+                            DEPTH = len(line) - len(line.lstrip()),
+                            LINKTO=None,
+                            ADDENDA=None,
+                            PARENT=None,
+                            LABEL=None,
+                            RAW=line)
+            preNodes.append(preNode)
 
         # compute parents
         for i in range(len(preNodes)):
-            preNodes[i]['parent'] = None
+            preNodes[i]['PARENT'] = None
             my = preNodes[i]
             if i>0: #first guy has no parent
                 for j in range(i+1): # i-j goes upwards
-                    if preNodes[i-j]['depth'] < my['depth']: #found parent
-                        preNodes[i]['parent'] = preNodes[i-j]['raw'].strip()  #parents
-                        break #stop. Wae now know our parent
+                    if preNodes[i-j]['DEPTH'] < my['DEPTH']: #found parent
+                        preNodes[i]['PARENT'] = preNodes[i-j]['RAW'].strip()  #parents
+                        break #stop. We now know our parent
+
+        #### HOW TO IDENTIFY PARENT, HOW TO ID
+
+        print()
+        for i,preNode in enumerate(preNodes):
+            line=preNode['RAW']
+            if '/' in line: #split off addenda
+                line, addenda = line[:line.find('/')], line[line.find('/')+1 :]
+            else:
+                addenda = ''
+
+            if ':' in line: #split off linktos
+                line, linkto = line[:line.find(':')], line[line.find(':')+1 :]
+                linkto=linkto.split()
+            else:
+                linkto=[]
+
+            words = line.strip().split(' ')
+            if len(words) == 1: #one word Labels become IDs
+                lineID = words[0].strip()
+            else:
+                lineID = IDs.pop(0) #else assign an ID
+
+            preNode['LABEL']=line.strip()
+            preNode['ID']=lineID.strip()
+            if addenda:
+                preNode['ADDENDA']=addenda.strip()
+            if linkto:
+                preNode['LINKTO']= linkto
+            print(preNode)
 
 
-        [print(preNode) for preNode in preNodes.values() ]
 
-        lines=[line.strip() for line in lines if line ]
+            """preNode[i]['ID'] = lineID
+            fromIDs.append(lineID)
+            for ID in linkto.split():
+                if ID not in toIDs:
+                    toIDs.append(ID)
+            newLines.append(f'ID    {lineID}\nLABEL {line}\nLINKTO  {linkto}')
+            """
+
+
+        ##### obsolete
+        """lines=[line.strip() for line in lines if line ]
+        #preNodes = [node for node in preNodes if node['raw'].strip()]
+        #print(len(lines),'=', len(preNodes) )
+
         newLines = []
         fromIDs = []
         toIDs   = []
@@ -235,10 +280,11 @@
                 if toID not in fromIDs:
                     fromIDs.append(toID)
                     newLines.append(f'ID    {toID}\nLABEL {toID}')
-
-        fillLEFT('\n\n'.join(newLines)) #newlines=mergeLeft(newLines)
+        """
+        #### Temporarily disabled
+        """fillLEFT('\n\n'.join(newLines)) #newlines=mergeLeft(newLines)
         onEdit(ev) #refresh LEFT pane
-
+        """
     def redoShortHands(freshData):
         s="a:b c d/extrastuff\nb:d/ more extrastuff"
         lines=[]
