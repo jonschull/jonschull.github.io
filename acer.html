@@ -184,8 +184,9 @@
 
     from collections import OrderedDict
     def onShortHands(ev):
-        assignedIDs = []
         IDs = [str(i) for i in range(1000)][1:]
+        assignedIDs = []
+
         shortStrings = editor.getValue()
         lines=shortStrings.split('\n')
         preNodes = []
@@ -215,6 +216,7 @@
             #### extract components for future use
             if '/' in line: #split off addenda
                 line, addenda = line[:line.find('/')], line[line.find('/')+1 :]
+                addenda=addenda.strip()
             else:
                 addenda = ''
 
@@ -236,21 +238,24 @@
             if preNode['PARENT']:  #since parent precedes child, parent ID is available for use
                 preNode['PARENT'] = preNode['PARENT']['ID']
 
+
+            #### assignment priority for IDs:
+            ####    as per addenda if addenda exists
+            ####    as per lineID if that ID is not taken
+            ####    as per IDs reservoir
+
+            #queue up lineID
             if addenda: #CURRENTLY MUST BE MANUALLY INSERTED /ID ZERO
-                addenda=addenda.strip()
                 preNode['ADDENDA']=addenda
                 IDfromAddenda = addenda.split('ID ')
                 if len(IDfromAddenda)>1:
-                    IDfromAddenda = IDfromAddenda[1].split(' ')[0]
-                    preNode['ID']= IDfromAddenda
+                    lineID = IDfromAddenda[1].split(' ')[0]
             else:
-                lineID = lineID.strip()
                 if lineID in assignedIDs:
                     lineID = IDs.pop(0) #else assign an ID
-                    assignedIDs.append(lineID)
-                else:
-                    preNode['ID']=lineID
-
+            # use lineID
+            preNode['ID']= lineID
+            assignedIDs.append(lineID)
 
             if linkto:
                 preNode['LINKTO']= linkto
