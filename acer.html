@@ -174,18 +174,17 @@
 
     network.on("click", networkClick);
 
-    def niceRep(preNode):
-        return preNode
-        goodKeys='ID LINKTO ADDENDA'.split(' ')
+    def niceRep(preNode, goodKeys = 'ID LABEL LINKTO PARENT ADDENDA'.split(' ')):
         ret=[]
         for k,v in preNode.items():
-            ret.append(f'{k} {v}')
+            if k in goodKeys:
+                ret.append(f'{k} {v}')
         return '  /'.join(ret)
 
 
     from collections import OrderedDict
-    from uuid import uuid4
     def onShortHands(ev):
+        assignedIDs = []
         IDs = [str(i) for i in range(1000)][1:]
         shortStrings = editor.getValue()
         lines=shortStrings.split('\n')
@@ -196,7 +195,6 @@
                             LINKTO=None,
                             ADDENDA=None,
                             PARENT=None,
-                            KEY=str(uuid4()),
                             LABEL=None,
                             RAW=line)
             preNodes.append(preNode)
@@ -207,14 +205,14 @@
             if i>0: #first guy has no parent
                 for j in range(i+1):
                     if preNodes[i-j]['DEPTH'] < my['DEPTH']: #found parent
-                        preNodes[i]['PARENT'] = preNodes[i-j]['KEY']  #parents
+                        preNodes[i]['PARENT'] = preNodes[i-j]  #parents
                         break #stop. We now know our parent
-
-        #### HOW TO IDENTIFY PARENT, HOW TO ID
 
         print()
         for i,preNode in enumerate(preNodes):
             line=preNode['RAW']
+
+            #### extract components for future use
             if '/' in line: #split off addenda
                 line, addenda = line[:line.find('/')], line[line.find('/')+1 :]
             else:
@@ -232,10 +230,28 @@
             else:
                 lineID = IDs.pop(0) #else assign an ID
 
+            #### use line and components carefully
             preNode['LABEL']=line.strip()
-            preNode['ID']=lineID.strip()
-            if addenda:
-                preNode['ADDENDA']=addenda.strip()
+
+            if preNode['PARENT']:  #since parent precedes child, parent ID is available for use
+                preNode['PARENT'] = preNode['PARENT']['ID']
+
+            if addenda: #CURRENTLY MUST BE MANUALLY INSERTED /ID ZERO
+                addenda=addenda.strip()
+                preNode['ADDENDA']=addenda
+                IDfromAddenda = addenda.split('ID ')
+                if len(IDfromAddenda)>1:
+                    IDfromAddenda = IDfromAddenda[1].split(' ')[0]
+                    preNode['ID']= IDfromAddenda
+            else:
+                lineID = lineID.strip()
+                if lineID in assignedIDs:
+                    lineID = IDs.pop(0) #else assign an ID
+                    assignedIDs.append(lineID)
+                else:
+                    preNode['ID']=lineID
+
+
             if linkto:
                 preNode['LINKTO']= linkto
             print(niceRep(preNode))
