@@ -99,7 +99,9 @@
     window.ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/');
     editor = window.ace.edit("SHORTHANDS");
     editor.setOptions({
-            'showLineNumbers':False}
+            'showLineNumbers':False,
+            'showInvisibles': True,
+            'useSoftTabs': False}
         )
     editor.session.setMode("ace/mode/yaml");
 
@@ -164,7 +166,7 @@
         graphString = document['LEFT'].text
         data, options, network = refreshGraph(graphString)
         freshData = data
-        print(freshData)
+        #print('data',freshData)
         #nodes = data['nodes']
         network.on("click", networkClick)  #rebuilt network, so rebuild click
 
@@ -175,11 +177,29 @@
 
     def onShortHands(ev):
         IDs = [str(i) for i in range(1000)][1:]
-        #document['SHORTHANDS'].unbind('input') #do not interrupt me with more typing
-        #shortStrings= document['SHORTHANDS'].text
         shortStrings = editor.getValue()
-        print('*'*10 + '\n'+ shortStrings)
         lines=shortStrings.split('\n')
+        preNodes = {}
+        for i,line in enumerate(lines):
+            preNode = dict(raw=line,
+                           depth = len(line) - len(line.lstrip()),
+                           ord=i,
+                           )
+            preNodes[i] = preNode
+
+        # compute parents
+        for i in range(len(preNodes)):
+            preNodes[i]['parent'] = None
+            my = preNodes[i]
+            if i>0: #first guy has no parent
+                for j in range(i+1): # i-j goes upwards
+                    if preNodes[i-j]['depth'] < my['depth']: #found parent
+                        preNodes[i]['parent'] = preNodes[i-j]['raw'].strip()  #parents
+                        break #stop. Wae now know our parent
+
+
+        [print(preNode) for preNode in preNodes.values() ]
+
         lines=[line.strip() for line in lines if line ]
         newLines = []
         fromIDs = []
