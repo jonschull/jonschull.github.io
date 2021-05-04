@@ -129,7 +129,7 @@
         document['status'].text = '  saved'
     document['Save'].bind('click', saveFileName)
 
-    from imports.nodeStuff import dataAndOptions
+    from imports.nodeStuff import dataAndOptions, getNodes
 
     fillLEFT(graphString)
 
@@ -179,7 +179,7 @@
         for k,v in preNode.items():
             if k in goodKeys:
                 ret.append(f'{k} {v}')
-        return '  /'.join(ret)
+        return '/' + '  /'.join(ret)
 
     def newNode(line):
         return dict( ID=None,
@@ -191,17 +191,29 @@
                         LABEL=None,
                         RAW=line)
 
+    IDs = [str(i) for i in range(1000)][1:]
+    def assignID(preNode,line,lineID, addenda, assignedIDs):
+        if addenda: #CURRENTLY MUST BE MANUALLY INSERTED /ID ZERO
+            preNode['ADDENDA']=addenda
+            IDfromAddenda = addenda.split('ID ')
+            if len(IDfromAddenda)>1:
+                lineID = IDfromAddenda[1].split(' ')[0]
+        else:
+            if lineID in assignedIDs:
+                lineID = IDs.pop(0) #else assign an ID
+        # use lineID
+        preNode['ID']= lineID
+        assignedIDs.append(lineID)
+        return preNode, assignedIDs
 
     from collections import OrderedDict
     def onShortHands(ev):
-        IDs = [str(i) for i in range(1000)][1:]
         assignedIDs = []
 
         shortStrings = editor.getValue()
         lines=shortStrings.split('\n')
 
-        preNodes = [newNode(line) for line in lines]
-        
+        preNodes = [newNode(line) for line in lines if line.strip()]
         # compute parents
         for i in range(len(preNodes)):
             my = preNodes[i]
@@ -242,25 +254,11 @@
             if preNode['PARENT']:  #since parent precedes child, parent ID is available for use
                 preNode['PARENTID'] = preNode['PARENT']['ID']
 
-
             #### assignment priority for IDs:
             ####    as per addenda if addenda exists
             ####    as per lineID if that ID is not taken
             ####    as per IDs reservoir
-
-            #queue up lineID
-            if addenda: #CURRENTLY MUST BE MANUALLY INSERTED /ID ZERO
-                preNode['ADDENDA']=addenda
-                IDfromAddenda = addenda.split('ID ')
-                if len(IDfromAddenda)>1:
-                    lineID = IDfromAddenda[1].split(' ')[0]
-            else:
-                if lineID in assignedIDs:
-                    lineID = IDs.pop(0) #else assign an ID
-            # use lineID
-            preNode['ID']= lineID
-            assignedIDs.append(lineID)
-
+            preNode, assignedIDs = assignID(preNode,line,lineID, addenda, assignedIDs)
 
             #Linktos
             if preNode['PARENT']:
@@ -268,43 +266,55 @@
             if linkto:
                 #print('linkto', linkto, preNode)
                 preNode['LINKTO'] += ' ' + linkto
+            preNode['ADDENDA'] = niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE'.split(' '))
+
+        linktos=set()
+        for preNode in preNodes:
+            for target in preNode['LINKTO'].split(' '):
+                linktos.add(target)
+
+        namedNodes=set([node['ID']for node in preNodes])
+
+        print('linktos', linktos)
+        print('named..', namedNodes)
+        print('need to add', linktos - namedNodes)
+        for ID in linktos-namedNodes:
+            if ID:
+                newPreNode = newNode(ID)
+                newPreNode['ID']=ID
+                newPreNode['LABEL']= ID
+                preNodes.append(newPreNode)
 
         newLines=[]
         for preNode in preNodes:
-            print(niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE ADDENDA PARENTID'.split(' ')))
-            newLine = niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE'.split(' '))
+            #print(niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE ADDENDA PARENTID'.split(' ')))
+            print('preNode Addenda', preNode['ADDENDA'])
+            newLine = niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE COLOR'.split(' '))
             newLine= newLine.replace('/','\n')
             newLines.append(newLine)
+
 
         fillLEFT('\n\n'.join(newLines)) #newlines=mergeLeft(newLines)
         onEdit(ev) #refresh LEFT pane
 
-    def redoShortHands(freshData):
-        s="a:b c d/extrastuff\nb:d/ more extrastuff"
-        lines=[]
-        nodes = freshData['nodes']
-        for node in nodes:
-            line = node['id']
-            if node['linkto']:
-                line+='   :' + node['linkto']
-            line+='/'
-            for k,v in node.items():
-                line+=k.upper()+ ' '+ node[k] + ' =~= '
-            lines.append(line)
-        print('redone:', '\n'.join(lines))
-
-        document['SHORTHANDS'].html = '</br>'.join(s.split('\n'))
 
     def onShortClick(ev):
-        global freshData
-        if freshData:
-            #print('freshData', freshData)
-            #redoShortHands(freshData)
-            freshData=False
-            #{'nodes': [{'url': '', 'id': 'a', 'label': 'a', 'linkto': 'b'}, {'url': '', 'id': 'b', 'label': 'b', 'linkto': 'c'}, {'url': '', 'id': 'c', 'label': 'c', 'linkto': ''}], 'edges': [{'from': 'a', 'to': 'b'}, {'from': 'b', 'to': 'c'}]}
+        print('shortclick')
+        nodes = getNodes(document['LEFT'].text)
+        lines=[]
+        for node in nodes:
+            print(node)
+            line=node['id']+ ':'
+            if 'linkto' in node:
+                line+=node['linkto']
+            for k,v in node.items():
+                line += '/' + k.upper() + ' ' + v
+            lines.append(line)
+        document['SHORTHANDS'].html= '<br>'.join(lines)
+
 
     document['SHORTHANDS'].bind('input', onShortHands)
-    document['SHORTHANDS'].bind('click', onShortClick)
+    #document['SHORTHANDS'].bind('dblclick', onShortClick)
 
     </script>
 
