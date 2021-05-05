@@ -104,8 +104,6 @@
             'useSoftTabs': False}
         )
     editor.session.setMode("ace/mode/yaml");
-    editor.container.addEventListener('keydown', ..., True)
-
 
     print('Available files:\n', list(storage.keys()))
 
@@ -160,15 +158,10 @@
             #document['LEFT'].html = content
             fillLEFT(content)
 
-    freshData = None
     def onEdit(ev):
-        global freshData
         document['status'].text = 'changed'
         graphString = document['LEFT'].text
         data, options, network = refreshGraph(graphString)
-        freshData = data
-        #print('data',freshData)
-        #nodes = data['nodes']
         network.on("click", networkClick)  #rebuilt network, so rebuild click
 
     document['LEFT'].bind('input',onEdit)
@@ -263,27 +256,24 @@
             if preNode['PARENT']:  #since parent precedes child, parent ID is available for use
                 preNode['PARENTID'] = preNode['PARENT']['ID']
 
-            #### assignment priority for IDs:
-            ####    as per addenda if addenda exists
-            ####    as per lineID if that ID is not taken
-            ####    as per IDs reservoir
             preNode, assignedIDs = assignID(preNode,line,lineID, addenda, assignedIDs)
 
-            #Linktos
+            #Linktos #aggregate linktos for when we get out of the loop
             if preNode['PARENT']:
                 preNode['PARENT']['LINKTO'] += ' ' + preNode['ID'] #works
             if linkto:
-                #print('linkto', linkto, preNode)
                 preNode['LINKTO'] += ' ' + linkto
             preNode['ADDENDA'] = niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE'.split(' '))
 
-        linktos=set()
+        linktos=set() #collect all the linktos for all the nodes
         for preNode in preNodes:
             for target in preNode['LINKTO'].split(' '):
                 linktos.add(target)
 
+        #collect all explicit IDs for all the  nodes
         namedNodes=set([node['ID']for node in preNodes])
 
+        #create nodes that were mentioned in linktos but not explicitly named
         for ID in linktos-namedNodes: #the linktos that need to be named
             if ID:
                 newPreNode = newNode(ID)
