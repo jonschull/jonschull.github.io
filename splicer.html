@@ -4,55 +4,7 @@
     <script type="text/javascript"  src="https://cdn.jsdelivr.net/npm/brython@3.9.0/brython.min.js">     </script>
     <script type="text/javascript"  src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.8/brython_stdlib.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js" type="text/javascript" charset="utf-8"></script>
-    <style type="text/css">
-        #editor {
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-        }
-
-        #mynetwork {
-            width: 100%;
-            height:700px;
-        }
-        table,td,th{
-            table-layout:fixed;
-            overflow-x:hidden
-            border: 1px solid black;
-        }
-        #SHORTHANDS, #LEFT{width:20%;
-                    white-space:nowrap;
-                    overflow:hidden;
-                    font-family: 'Courier New', monospace;
-                    font-weight: bold;
-                    font-size:10px; }
-
-        #console{height:200px;
-                 width:90%;
-                 resize:both;
-                 font-size:10px;
-                 overflow-y:scroll;
-                 display: flex;
-                 flex-direction: column-reverse;}
-        td{
-            width:200px;
-            min-width:200px;
-            max-width:200px;
-        }
-        body {
-            margin: 0;            /* Reset default margin */
-        }
-        iframe {
-            display: block;       /* iframes are inline by default */
-            background: #000;
-            border: none;         /* Reset default border */
-            height: 100vh;        /* Viewport-relative units */
-            width: 100vw;
-        }
-    </style>
-
+    <link rel="stylesheet" href="splicerStyles.css">
 </head>
 <body onload="brython()">
     <script type="text/python">
@@ -63,27 +15,31 @@
 
     #filename and graphString are GLOBAL
     #...index.html?filename=whatever
-    filename = document.query.getfirst('filename')
-    if not filename:
-        filename='graphString.txt'
-    if filename in storage:
-        graphString = storage[filename]
-        print('loaded', filename)
-    else: #save default graphString.txt as under filename
-        graphString=open('graphString.txt').read() #this only works from server
-        print('using default remote graphString.txt')
-
+    def fileStart():
+        global filename, graphString
+        filename = document.query.getfirst('filename')
+        if not filename:
+            filename='graphString.txt'
+        if filename in storage:
+            graphString = storage[filename]
+            print('loaded', filename)
+        else: #save default graphString.txt as under filename
+            graphString=open('graphString.txt').read() #this only works from server
+            print('using default remote graphString.txt')
+    fileStart()
 
     ### print and errors will go to console (unless Brython fails)
-    document <= DIV(PRE(ID='console',  contenteditable='true'))
-    import sys
-    class MyOutput:
-        def __init__(self):
-            self.console = document["console"]
-        def write(self, text):
-            self.console.html +=  text + '</hr>'
-    sys.stdout = MyOutput()
-    sys.stderr = MyOutput()
+    def redirectOutputs():
+        document <= DIV(PRE(ID='console',  contenteditable='true'))
+        import sys
+        class MyOutput:
+            def __init__(self):
+                self.console = document["console"]
+            def write(self, text):
+                self.console.html +=  text + '</hr>'
+        sys.stdout = MyOutput()
+        sys.stderr = MyOutput()
+    redirectOutputs()
 
     document <= TABLE(  TR( TH('ShortHands')
                             +TH('Filename '
@@ -101,14 +57,11 @@
     editor.setOptions({
             'showLineNumbers':False,
             'showInvisibles': True,
-            'useSoftTabs': False}
-        )
+            'useSoftTabs': False})
     editor.session.setMode("ace/mode/yaml");
 
     print('Available files:\n', list(storage.keys()))
 
-    def fillLEFT(src):
-        document['LEFT'].html = '<br>'.join(src.split('\n'))
 
     def loadFileName(ev):
         global filename
@@ -118,7 +71,6 @@
         document['status'].text = '  loaded'
         onEdit(ev)
     document['Load'].bind('click', loadFileName)
-
 
     def saveFileName(ev):
         global filename
@@ -130,14 +82,13 @@
 
     from imports.nodeStuff import dataAndOptions, getNodes
 
-    fillLEFT(graphString)
 
     def refreshGraph(graphString):
         data, options = dataAndOptions(graphString)
         network = window.vis.Network.new(document['mynetwork'], data, options)
         return (data, options, network)
-
     data, options, network = refreshGraph(graphString)
+
 
     def networkClick(params): #bound via network.on below
         print('networkClick', params.nodes)
@@ -148,6 +99,7 @@
             if URL:
                 document['LEFT'].html = URL; # for a moment,
                 aio.run(showFile(URL))       # until this finishes
+    network.on("click", networkClick);
 
     async def showFile(src): #works locally and via server
         # Text file
@@ -163,10 +115,7 @@
         graphString = document['LEFT'].text
         data, options, network = refreshGraph(graphString)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
-
     document['LEFT'].bind('input',onEdit)
-
-    network.on("click", networkClick);
 
     def niceRep(preNode, goodKeys = 'ID LABEL LINKTO PARENT ADDENDA'.split(' ')):
         ret=[]
@@ -179,7 +128,6 @@
         return dict( ID=None,
                         DEPTH = len(line) - len(line.lstrip()),
                         LINKTO='',
-                        ADDENDA=None,
                         PARENT=None,
                         PARENTID=None,
                         LABEL=None,
@@ -199,16 +147,17 @@
         assignedIDs.append(lineID)
         return preNode, assignedIDs
 
-    from collections import OrderedDict
     lastKeyStroke=0
+    preNodes='not yet'
+
     def onShortHands(ev):
+        global preNodes
         global lastKeyStroke
         now = window.Date.now()
         if now - lastKeyStroke < 300:
             lastKeyStroke = now
             return
         lastKeyStroke = now
-
 
         assignedIDs = []
         shortStrings = editor.getValue()
@@ -248,7 +197,7 @@
                 lineID = words[0].strip()
             else:
                 lineID = IDs.pop(0) #else assign an ID
-                preNode['ADDENDA']= '/ID ' + lineID
+                #preNode['ADDENDA']= '/ID ' + lineID
 
             #### use line and components carefully
             preNode['LABEL']=line.strip()
@@ -256,6 +205,7 @@
             if preNode['PARENT']:  #since parent precedes child, parent ID is available for use
                 preNode['PARENTID'] = preNode['PARENT']['ID']
 
+            ####assign ID and update assignedIDs
             preNode, assignedIDs = assignID(preNode,line,lineID, addenda, assignedIDs)
 
             #Linktos #aggregate linktos for when we get out of the loop
@@ -263,7 +213,7 @@
                 preNode['PARENT']['LINKTO'] += ' ' + preNode['ID'] #works
             if linkto:
                 preNode['LINKTO'] += ' ' + linkto
-            preNode['ADDENDA'] = niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE'.split(' '))
+            #preNode['ADDENDA'] = niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE'.split(' '))
 
         linktos=set() #collect all the linktos for all the nodes
         for preNode in preNodes:
@@ -284,7 +234,7 @@
         newLines=[]
         for preNode in preNodes:
             #print(niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE ADDENDA PARENTID'.split(' ')))
-            print('preNode Addenda', preNode['ADDENDA'])
+            #print('preNode Addenda', preNode['ADDENDA'])
             newLine = niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE COLOR'.split(' '))
             newLine= newLine.replace('/','\n')
             newLines.append(newLine)
@@ -293,6 +243,10 @@
         fillLEFT('\n\n'.join(newLines)) #newlines=mergeLeft(newLines)
         onEdit(ev) #refresh LEFT pane
 
+    def fillLEFT(src):
+        print('fillLeft data.keys:', list(data.keys()), 'preNodes:', preNodes)
+        document['LEFT'].html = '<br>'.join(src.split('\n'))
+    fillLEFT(graphString)
 
     def onShortClick(ev):
         print('shortclick')
@@ -313,6 +267,5 @@
     #document['SHORTHANDS'].bind('dblclick', onShortClick)
 
     </script>
-
 </body>
 </html>
