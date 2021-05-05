@@ -104,6 +104,7 @@
             'useSoftTabs': False}
         )
     editor.session.setMode("ace/mode/yaml");
+    editor.container.addEventListener('keydown', ..., True)
 
 
     print('Available files:\n', list(storage.keys()))
@@ -191,25 +192,32 @@
                         LABEL=None,
                         RAW=line)
 
-    IDs = [str(i) for i in range(1000)][1:]
+    IDs = set([str(i) for i in range(1000)][1:])
     def assignID(preNode,line,lineID, addenda, assignedIDs):
         if addenda: #CURRENTLY MUST BE MANUALLY INSERTED /ID ZERO
-            preNode['ADDENDA']=addenda
             IDfromAddenda = addenda.split('ID ')
             if len(IDfromAddenda)>1:
                 lineID = IDfromAddenda[1].split(' ')[0]
         else:
             if lineID in assignedIDs:
-                lineID = IDs.pop(0) #else assign an ID
+                lineID = list(IDs - set(assignedIDs))[0]
         # use lineID
         preNode['ID']= lineID
         assignedIDs.append(lineID)
         return preNode, assignedIDs
 
     from collections import OrderedDict
+    lastKeyStroke=0
     def onShortHands(ev):
-        assignedIDs = []
+        global lastKeyStroke
+        now = window.Date.now()
+        if now - lastKeyStroke < 300:
+            lastKeyStroke = now
+            return
+        lastKeyStroke = now
 
+
+        assignedIDs = []
         shortStrings = editor.getValue()
         lines=shortStrings.split('\n')
 
@@ -247,6 +255,7 @@
                 lineID = words[0].strip()
             else:
                 lineID = IDs.pop(0) #else assign an ID
+                preNode['ADDENDA']= '/ID ' + lineID
 
             #### use line and components carefully
             preNode['LABEL']=line.strip()
@@ -275,10 +284,7 @@
 
         namedNodes=set([node['ID']for node in preNodes])
 
-        print('linktos', linktos)
-        print('named..', namedNodes)
-        print('need to add', linktos - namedNodes)
-        for ID in linktos-namedNodes:
+        for ID in linktos-namedNodes: #the linktos that need to be named
             if ID:
                 newPreNode = newNode(ID)
                 newPreNode['ID']=ID
