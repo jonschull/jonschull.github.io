@@ -111,6 +111,7 @@
             fillLEFT(content)
 
     def onEdit(ev):
+        global data
         document['status'].text = 'changed'
         graphString = document['LEFT'].text
         data, options, network = refreshGraph(graphString)
@@ -147,11 +148,38 @@
         assignedIDs.append(lineID)
         return preNode, assignedIDs
 
-    lastKeyStroke=0
-    preNodes='not yet'
+    def splice(preNodes):
+        """interweave nodes and preNodes before sending to fillLeft
+        NOT YET"""
+        newLines=[]
+        newNodes=preNodes
+        mergedNodes=[]
 
+        oldNodes = {} #a dict of diagrammed nodes, indexed by ID, but now with upper case keys
+        for node in data['nodes']:
+            uppered={}
+            for k,v in node.items():
+                uppered[k.upper()] = v
+            oldNodes[uppered['ID']] = uppered
+
+        for newNode in newNodes:
+            if newNode['ID'] in oldNodes: #merge new shorthand values into oldNode
+                mergedNode = oldNodes[newNode['ID']] | newNode  #MERGE
+                mergedNodes.append(mergedNode)
+            else:
+                mergedNodes.append(newNode)
+
+        ### note:  what this fails to do is preserve nodes created in LEFT
+
+        for mergedNode in mergedNodes:
+            print('mergedNode', mergedNode)
+            newLine = niceRep(mergedNode, goodKeys='ID LABEL LINKTO TITLE COLOR SHAPE'.split(' '))
+            newLine= newLine.replace('/','\n')
+            newLines.append(newLine)
+        return newLines
+
+    lastKeyStroke=0
     def onShortHands(ev):
-        global preNodes
         global lastKeyStroke
         now = window.Date.now()
         if now - lastKeyStroke < 300:
@@ -231,20 +259,12 @@
                 newPreNode['LABEL']= ID
                 preNodes.append(newPreNode)
 
-        newLines=[]
-        for preNode in preNodes:
-            #print(niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE ADDENDA PARENTID'.split(' ')))
-            #print('preNode Addenda', preNode['ADDENDA'])
-            newLine = niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE COLOR'.split(' '))
-            newLine= newLine.replace('/','\n')
-            newLines.append(newLine)
-
+        newLines= splice(preNodes)
 
         fillLEFT('\n\n'.join(newLines)) #newlines=mergeLeft(newLines)
         onEdit(ev) #refresh LEFT pane
 
     def fillLEFT(src):
-        print('fillLeft data.keys:', list(data.keys()), 'preNodes:', preNodes)
         document['LEFT'].html = '<br>'.join(src.split('\n'))
     fillLEFT(graphString)
 
