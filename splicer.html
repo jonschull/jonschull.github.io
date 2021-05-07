@@ -60,14 +60,23 @@
             'useSoftTabs': False})
     editor.session.setMode("ace/mode/yaml");
 
-    print('Available files:\n', list(storage.keys()))
-
+    #print('Available files:\n', [key for key in storage if not key.endswith('.short')] )
 
     def loadFileName(ev):
         global filename
         filename = document['filename'].value
+        if not filename in storage:
+            print('AVAILABLE FILES', [key for key in storage if not key.endswith('.short')])
+            return
+
         graphString = storage[filename]
         fillLEFT(graphString)
+
+        ####NEW AND UNTESTED
+        if filename + '.short' in storage:
+            shortHands= storage[filename + '.short']
+            editor.setValue(shortHands)
+
         document['status'].text = '  loaded'
         onEdit(ev)
     document['Load'].bind('click', loadFileName)
@@ -75,8 +84,9 @@
     def saveFileName(ev):
         global filename
         filename = document['filename'].value
-        graphString=document['LEFT'].text
-        storage[filename] = graphString
+        graphString=document['LEFT'].text ;   storage[filename] = graphString
+        shortHands = editor.getValue()    ;  storage[filename+'.short'] = shortHands
+
         document['status'].text = '  saved'
     document['Save'].bind('click', saveFileName)
 
