@@ -12,21 +12,12 @@
     from browser.local_storage import storage
     from javascript import JSON
     from browser.html import *
+    STARTING=True
 
     #filename and graphString are GLOBAL
     #...index.html?filename=whatever
-    def fileStart():
-        global filename, graphString
-        filename = document.query.getfirst('filename')
-        if not filename:
-            filename='graphString.txt'
-        if filename in storage:
-            graphString = storage[filename]
-            print('loaded', filename)
-        else: #save default graphString.txt as under filename
-            graphString=open('graphString.txt').read() #this only works from server
-            print('using default remote graphString.txt')
-    fileStart()
+    filename =  document.query.getfirst('filename') or ''
+    graphString = 'LABEL Welcome!'
 
     ### print and errors will go to console (unless Brython fails)
     def redirectOutputs():
@@ -41,6 +32,7 @@
         sys.stderr = MyOutput()
     redirectOutputs()
 
+    print('filename', filename)
     document <= TABLE(  TR( TH('ShortHands')
                             +TH('Filename '
                                 + INPUT(filename, id='filename', value=filename)
@@ -65,14 +57,15 @@
     def loadFileName(ev):
         global filename
         filename = document['filename'].value
+        print('load', filename )
         if not filename in storage:
             print('AVAILABLE FILES', [key for key in storage if not key.endswith('.short')])
             return
 
         graphString = storage[filename]
+        #print('loaded NONGLOBAL', graphString)
         fillLEFT(graphString)
 
-        ####NEW AND UNTESTED
         if filename + '.short' in storage:
             shortHands= storage[filename + '.short']
             editor.setValue(shortHands)
@@ -84,7 +77,9 @@
     def saveFileName(ev):
         global filename
         filename = document['filename'].value
-        graphString=document['LEFT'].text ;   storage[filename] = graphString
+        #print(window.Date.now(), 'saving  to', filename,':\n', document['LEFT'].text)
+        storage[filename] = document['LEFT'].text
+
         shortHands = editor.getValue()    ;  storage[filename+'.short'] = shortHands
 
         document['status'].text = '  saved'
@@ -98,7 +93,6 @@
         network = window.vis.Network.new(document['mynetwork'], data, options)
         return (data, options, network)
     data, options, network = refreshGraph(graphString)
-
 
     def networkClick(params): #bound via network.on below
         print('networkClick', params.nodes)
@@ -114,7 +108,7 @@
     async def showFile(src): #works locally and via server
         # Text file
         req = await aio.ajax("GET", src)
-        print(src, req.statusText)
+        print('showFile', src, req.statusText)
         if req.statusText == 'OK':
             content = JSON.parse(req.data)['content']
             #document['LEFT'].html = content
@@ -126,7 +120,9 @@
         graphString = document['LEFT'].text
         data, options, network = refreshGraph(graphString)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
+        #print('onEdit data', data)
     document['LEFT'].bind('input',onEdit)
+
 
     def niceRep(preNode, goodKeys = 'ID LABEL LINKTO PARENT ADDENDA'.split(' ')):
         ret=[]
@@ -159,8 +155,12 @@
         return preNode, assignedIDs
 
     def splice(preNodes):
-        """interweave nodes and preNodes before sending to fillLeft
-        NOT YET"""
+        global STARTING
+        if STARTING:
+            STARTING=False
+            return ''
+        """interweave nodes and preNodes before sending to fillLeft"""
+        #print('splice:', preNodes)
         newLines=[]
         newNodes=preNodes
         mergedNodes=[]
@@ -179,22 +179,21 @@
             else:
                 mergedNodes.append(newNode)
 
-        ### note:  what this fails to do is preserve nodes created in LEFT
-
         for mergedNode in mergedNodes:
-            print('mergedNode', mergedNode)
+            #print('mergedNode', mergedNode)
             newLine = niceRep(mergedNode, goodKeys='ID LABEL LINKTO TITLE COLOR SHAPE'.split(' '))
             newLine= newLine.replace('/','\n')
             newLines.append(newLine)
         return newLines
 
     lastKeyStroke=0
-    def onShortHands(ev):
+    def onShortHands(ev, FORCE=True):
         global lastKeyStroke
         now = window.Date.now()
-        if now - lastKeyStroke < 300:
-            lastKeyStroke = now
-            return
+        if not FORCE:
+            if  now - lastKeyStroke < 300:
+                lastKeyStroke = now
+                return
         lastKeyStroke = now
 
         assignedIDs = []
@@ -211,7 +210,7 @@
                         preNodes[i]['PARENT'] = preNodes[i-j]  #parents
                         break # We now know our parent
 
-        print()
+        #print()
         for i,preNode in enumerate(preNodes):
             line=preNode['RAW']
 
@@ -293,8 +292,13 @@
         document['SHORTHANDS'].html= '<br>'.join(lines)
 
 
+    def doSomething(ev):
+        print('doSomething', ev)
+        print('data', data)
+
+
     document['SHORTHANDS'].bind('input', onShortHands)
-    #document['SHORTHANDS'].bind('dblclick', onShortClick)
+    document['console'].bind('dblclick', doSomething)
 
     </script>
 </body>
