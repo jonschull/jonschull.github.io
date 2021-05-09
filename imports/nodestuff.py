@@ -23,16 +23,19 @@ options = { "physics":{"enabled":True
                       },
             "autoResize": True,
             "layout":{  "improvedLayout": True, "hierarchical":{
+                                          "shakeTowards": 'roots',
                                           "enabled": True,
                                           "direction": 'LR',
                                           "sortMethod": "directed",
-                                          "nodeSpacing":5,
-                                          "treeSpacing":5}},
+                                          "nodeSpacing":1,
+                                          "treeSpacing":1}},
                 "edges":{"smooth": True,
-                         "arrows":{"to":True}
+                         "arrows":{"to":True},
+                         "shadow" : True
                          },
                  "nodes":{"shape":"box",
-                          "font" :"14px"
+                          "font" :"14px",
+                          "shadow": True
                          }
              };
 

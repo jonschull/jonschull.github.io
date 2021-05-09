@@ -296,12 +296,12 @@
 
 
     def doSomething(ev):
-        print('doSomething', ev)
-        print('assignedIDs', assignedIDs)
+        print('options', str(options).replace('{','\n{'))
 
 
     document['SHORTHANDS'].bind('input', onShortHands)
     document['console'].bind('dblclick', doSomething)
+
     print('filename',filename)
     loadFileName(filename)
 
