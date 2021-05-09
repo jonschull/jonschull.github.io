@@ -32,7 +32,7 @@
         sys.stderr = MyOutput()
     redirectOutputs()
 
-    print('filename', filename)
+    #print('filename', filename)
     document <= TABLE(  TR( TH('ShortHands')
                             +TH('Filename '
                                 + INPUT(filename, id='filename', value=filename)
@@ -147,11 +147,11 @@
             if len(IDfromAddenda)>1:
                 lineID = IDfromAddenda[1].split(' ')[0]
         else:
-            if lineID in assignedIDs:
-                lineID = list(IDs - set(assignedIDs))[0]
+            if lineID==-1 or (lineID in assignedIDs):
+                lineID = list(IDs - assignedIDs)[0]
         # use lineID
         preNode['ID']= lineID
-        assignedIDs.append(lineID)
+        assignedIDs.add(lineID)
         return preNode, assignedIDs
 
     def splice(preNodes):
@@ -188,7 +188,7 @@
 
     lastKeyStroke=0
     def onShortHands(ev, FORCE=True):
-        global lastKeyStroke
+        global lastKeyStroke, assignedIDs
         now = window.Date.now()
         if not FORCE:
             if  now - lastKeyStroke < 300:
@@ -196,7 +196,7 @@
                 return
         lastKeyStroke = now
 
-        assignedIDs = []
+        assignedIDs = set()
         shortStrings = editor.getValue()
         lines=shortStrings.split('\n')
 
@@ -233,7 +233,10 @@
             if len(words) == 1: #one word Labels become IDs
                 lineID = words[0].strip()
             else:
-                lineID = IDs.pop(0) #else assign an ID
+                #### get this right
+                #lineID = IDs.pop(0) #else assign an ID
+                lineID = -1
+
                 #preNode['ADDENDA']= '/ID ' + lineID
 
             #### use line and components carefully
@@ -294,11 +297,13 @@
 
     def doSomething(ev):
         print('doSomething', ev)
-        print('data', data)
+        print('assignedIDs', assignedIDs)
 
 
     document['SHORTHANDS'].bind('input', onShortHands)
     document['console'].bind('dblclick', doSomething)
+    print('filename',filename)
+    loadFileName(filename)
 
     </script>
 </body>
