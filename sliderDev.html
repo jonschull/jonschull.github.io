@@ -1,0 +1,76 @@
+<html>
+<head>
+    <script type="text/javascript"  src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script type="text/javascript"  src="https://cdn.jsdelivr.net/npm/brython@3.9.0/brython.min.js">     </script>
+    <script type="text/javascript"  src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.8/brython_stdlib.js"></script>
+
+    <style type="text/css">
+      body {
+        font: 10pt sans;
+      }
+
+      .table-scroll {
+        display: inline-block;
+        position: relative;
+      	outline: 1px solid #000;
+        outline-offset: -1px;
+        max-width: 100%;
+      	max-height: 90vh;
+      	overflow: auto;
+      }
+      .fixed-headers {
+      	border: 1px solid #000;
+        border-width: 1px 0 0 1px;
+      	border-collapse: separate;
+      	border-spacing: 0;
+      	width: 1000px;
+      }
+      .fixed-headers th,
+      .fixed-headers td {
+      	border: 1px solid #000;
+        border-width: 0 1px 1px 0;
+      	padding: 5px 10px;
+      }
+      .fixed-headers th {
+        position: -webkit-sticky;
+        position: sticky;
+        z-index: 1;
+        left: 0;
+        background: #ffd;
+      	text-transform: capitalize;
+      }
+      .fixed-headers thead th {
+        z-index: 2;
+      	top: 0;
+        left: auto;
+        resize: horizontal;
+        overflow: auto;
+      	background: #cff;
+        vertical-align: baseline;
+      }
+      .fixed-headers thead th:first-child {
+        z-index: 3;
+        left: 0;
+      }
+
+
+    </style>
+
+</head>
+<body onload="brython()">
+<script type="text/python">
+from browser import document, html,window
+from browser.html import *
+document <= B('ok')
+document <= DIV(
+                TABLE(  THEAD(TR( TH('ShortHands')
+                        +TH()
+                        +TH('Diagram')))
+                    +TR (TD('Shorthands!!!',ID='SHORTHANDS', contenteditable='true')
+                        +TD('Text goes here!!!',ID='LEFT', contenteditable='true')
+                        +TD(DIV('diagram goes here', id="mynetwork"))),
+                Class='fixed-headers'),
+            Class='table-scroll')
+</script>
+</body>
+</html>
