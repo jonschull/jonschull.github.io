@@ -19,8 +19,7 @@ LABEL   Another Second-level Item
 TITLE   This is popup text
 URL     testsource.html
 """
-options = { "physics":{"enabled":True
-                      },
+options = { "physics":{"enabled":True},
             "autoResize": True,
             "layout":{  "improvedLayout": True, "hierarchical":{
                                           "shakeTowards": 'roots',

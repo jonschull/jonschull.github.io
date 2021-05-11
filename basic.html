@@ -1,0 +1,65 @@
+<html>
+<head>
+    <script type="text/javascript"  src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script type="text/javascript"  src="https://cdn.jsdelivr.net/npm/brython@3.9.0/brython.min.js">     </script>
+    <script type="text/javascript"  src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.8/brython_stdlib.js"></script>
+
+    <style type="text/css">
+      body {
+        font: 10pt sans;
+      }
+      #mynetwork {
+        width: 600px;
+        height: 600px;
+        border: 1px solid lightgray;
+      }
+    </style>
+
+</head>
+<body onload="brython()">
+<script type="text/python">
+from browser import document, html,window
+from browser.html import *
+document <= B('ok')
+document <= TABLE(  TR( TH('ShortHands')
+                        +TH()
+                        +TH('Diagram'))
+                    +TR (TD('Shorthands!!!',ID='SHORTHANDS', contenteditable='true')
+                        +TD('Text goes here!!!',ID='LEFT', contenteditable='true')
+                        +TD(DIV('diagram goes here', id="mynetwork"))))
+container = document['mynetwork']
+
+nodes = [
+  { 'id': 1, 'label': "Node 1" },
+  { 'id': 2, 'label': "Node 2" },
+  { 'id': 3, 'label': "Node 3" },
+  { 'id': 4, 'label': "Node 4" },
+  { 'id': 5, 'label': "Node 5" },
+]
+# create an array with edges
+edges = [
+{ 'from': 1, 'to': 3 },
+{ 'from': 1, 'to': 2 },
+{ 'from': 2, 'to': 4 },
+{ 'from': 2, 'to': 5 },
+{ 'from': 3, 'to': 3 }
+]
+
+data = {
+  'nodes': nodes,
+  'edges': edges,
+};
+options = {
+    'configure':{'enabled':True,
+                'filter': 'physics',
+                'container':document['LEFT']
+                }
+};
+network = network = window.vis.Network.new(document['mynetwork'], data, options)
+
+
+
+</script>
+
+</body>
+</html>

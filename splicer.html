@@ -40,8 +40,8 @@
                                 + SPAN(id='status')
                                 + BUTTON('Load', id='Load') )
                             +TH('Diagram'))
-                        +TR (TD('Shorthands!!!',ID='SHORTHANDS', contenteditable='true')
-                            +TD('Text goes here!!!',ID='LEFT', contenteditable='true')
+                        +TR (TD('Shorthands!!!',ID='SHORTHANDS', Class='scrollable',  contenteditable='true')
+                            +TD('Text goes here!!!',ID='LEFT', Class='scrollable', contenteditable='true')
                             +TD(DIV('goes here', id="mynetwork"))))
 
     window.ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/');
@@ -90,6 +90,9 @@
 
     def refreshGraph(graphString):
         data, options = dataAndOptions(graphString)
+        options['configure']= {'enabled':True,
+                    'filter': 'nodes'
+                    }
         network = window.vis.Network.new(document['mynetwork'], data, options)
         return (data, options, network)
     data, options, network = refreshGraph(graphString)
@@ -296,7 +299,8 @@
 
 
     def doSomething(ev):
-        print('options', str(options).replace('{','\n{'))
+        options['configure']['enabled'] = not options['configure']['enabled']
+        print("options['configure']['enabled']", options['configure']['enabled'])
 
 
     document['SHORTHANDS'].bind('input', onShortHands)
