@@ -308,8 +308,9 @@
 
 
     def doSomething(ev):
-        global options, graphString
+        global data, options, graphString #graphString is kept fresh by fillLeft
         print('options', options)
+        #toggle configurator
         options['configure']['enabled'] = not options['configure']['enabled']
         data, options, network = refreshGraph(graphString)
 
