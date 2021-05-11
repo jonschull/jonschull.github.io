@@ -33,7 +33,8 @@
     redirectOutputs()
 
     #print('filename', filename)
-    document <= TABLE(  TR( TH('ShortHands')
+    document <= DIV(
+                TABLE(  TR( TH('ShortHands')
                             +TH('Filename '
                                 + INPUT(filename, id='filename', value=filename)
                                 + BUTTON('Save', id='Save')
@@ -43,6 +44,7 @@
                         +TR (TD('Shorthands!!!',ID='SHORTHANDS', Class='scrollable',  contenteditable='true')
                             +TD('Text goes here!!!',ID='LEFT', Class='scrollable', contenteditable='true')
                             +TD(DIV('goes here', id="mynetwork"))))
+                    )
 
     window.ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/');
     editor = window.ace.edit("SHORTHANDS");
