@@ -93,13 +93,15 @@
     from imports.nodeStuff import dataAndOptions, getNodes
 
 
-    def refreshGraph(graphString):
+    def refreshGraph(graphString='a:b\n',modifiedOptions=None):
         data, options = dataAndOptions(graphString)
-        options['configure']= {'enabled':True,
-                    'filter': 'physics'
-                    }
+        options = modifiedOptions or options
+        #options['configure']= {'enabled':True,
+        #            'filter': 'physics'
+        #            }
         network = window.vis.Network.new(document['mynetwork'], data, options)
         return (data, options, network)
+
     data, options, network = refreshGraph(graphString)
 
     def networkClick(params): #bound via network.on below
@@ -285,7 +287,9 @@
         onEdit(ev) #refresh LEFT pane
 
     def fillLEFT(src):
+        global graphString
         document['LEFT'].html = '<br>'.join(src.split('\n'))
+        graphString=src
     fillLEFT(graphString)
 
     def onShortClick(ev):
@@ -304,8 +308,11 @@
 
 
     def doSomething(ev):
+        global options, graphString
+        print('options', options)
         options['configure']['enabled'] = not options['configure']['enabled']
-        print("options['configure']['enabled']", options['configure']['enabled'])
+        data, options, network = refreshGraph(graphString)
+
 
 
     document['SHORTHANDS'].bind('input', onShortHands)
