@@ -12,7 +12,7 @@
     <script type="text/python">
     from browser import document, html, aio, window, load
     from browser.local_storage import storage
-    from javascript import JSON
+    from javascript import JSON, jsobj2pyobj
     from browser.html import *
     STARTING=True
 
@@ -319,7 +319,11 @@
         print('doSomething')
 
     def configChange(ev):
-        print('configChange', window.JSON.stringify(ev))
+        global options
+        print('configChange', JSON.stringify(ev))
+        parsed = JSON.parse(JSON.stringify(ev))
+        for key in parsed: #there should actually be one key
+            options[key] = parsed[key]
 
     def getOptions(ev):
         global data, options, graphString, network
@@ -333,7 +337,7 @@
             options['configure']['enabled']=True
             options['configure']['filter'] = ev.target.id
 
-        data, options, network = refreshGraph(graphString, options)
+        data, options, network = refreshGraph(graphString, options) #this will update options
         network.on('configChange', configChange)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
 
