@@ -42,7 +42,9 @@
                                 + BUTTON('Save', id='Save')
                                 + SPAN(id='status')
                                 + BUTTON('Load', id='Load') )
-                            +TH('Diagram')))
+                            +TH(BUTTON('optionizer', id='optionizer')
+                                +' Diagram'
+                            )))
                         +TR (TD('Shorthands!!!',ID='SHORTHANDS', Class='scrollable',  contenteditable='true')
                             +TD('Text goes here!!!',ID='LEFT', Class='scrollable', contenteditable='true')
                             +TD(DIV('goes here', id="mynetwork"))),
@@ -308,17 +310,24 @@
 
 
     def doSomething(ev):
-        global data, options, graphString #graphString is kept fresh by fillLeft
-        print('options', options)
-        #toggle configurator
+        global data, options, graphString, network #graphString is kept fresh by fillLeft
         options['configure']['enabled'] = not options['configure']['enabled']
+        options['configure']['filter']='physics'
+
+        if options['configure']['enabled']:
+            #options['configure']['container'] = document['LEFT']
+            #document['LEFT'].text = 'LABEL yikes'
+            pass
         data, options, network = refreshGraph(graphString)
 
+
+    def getOptions(ev):
+        print(document['mynetwork'].text)
 
 
     document['SHORTHANDS'].bind('input', onShortHands)
     document['console'].bind('dblclick', doSomething)
-
+    document['optionizer'].bind('click', getOptions)
     print('filename',filename)
     loadFileName(filename)
 
