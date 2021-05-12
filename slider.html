@@ -42,11 +42,16 @@
                                 + BUTTON('Save', id='Save')
                                 + SPAN(id='status')
                                 + BUTTON('Load', id='Load') )
-                            +TH(BUTTON('optionizer', id='optionizer')
+                            +TH(BUTTON('toggle Options', id='toggle')
                                 +' Diagram'
+                                +BR()
+                                +BUTTON('physics', id='physics')
+                                +BUTTON('nodes', id='nodes')
+                                +BUTTON('edges', id='edges')
+                                +BUTTON('other', id='other')
                             )))
-                        +TR (TD('Shorthands!!!',ID='SHORTHANDS', Class='scrollable',  contenteditable='true')
-                            +TD('Text goes here!!!',ID='LEFT', Class='scrollable', contenteditable='true')
+                        +TR (TD('Shorthands!!!',ID='SHORTHANDS',   contenteditable='true')
+                            +TD('Text goes here!!!',ID='LEFT',  contenteditable='true')
                             +TD(DIV('goes here', id="mynetwork"))),
                             Class='fixed-headers'),
                     Class='table-scroll')
@@ -127,11 +132,12 @@
             fillLEFT(content)
 
     def onEdit(ev):
-        global data
+        global data, options, network, graphString
         document['status'].text = 'changed'
         graphString = document['LEFT'].text
         data, options, network = refreshGraph(graphString)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
+        network.on('configChange', configChange)
         #print('onEdit data', data)
     document['LEFT'].bind('input',onEdit)
 
@@ -309,25 +315,34 @@
         document['SHORTHANDS'].html= '<br>'.join(lines)
 
 
-    def doSomething(ev):
-        global data, options, graphString, network #graphString is kept fresh by fillLeft
-        options['configure']['enabled'] = not options['configure']['enabled']
-        options['configure']['filter']='physics'
+    def doSomething(ev,filter='nodes'):
+        print('doSomething')
 
-        if options['configure']['enabled']:
-            #options['configure']['container'] = document['LEFT']
-            #document['LEFT'].text = 'LABEL yikes'
-            pass
-        data, options, network = refreshGraph(graphString)
-
+    def configChange(ev):
+        print('configChange', window.JSON.stringify(ev))
 
     def getOptions(ev):
-        print(document['mynetwork'].text)
+        global data, options, graphString, network
+        #print(document['mynetwork'].text)
+        print('ev.text', ev.target.id)
+
+        if ev.target.id == 'toggle':
+            options['configure']['enabled'] = not options['configure']['enabled']
+
+        if ev.target.id in 'physics nodes edges'.split():
+            options['configure']['enabled']=True
+            options['configure']['filter'] = ev.target.id
+
+        data, options, network = refreshGraph(graphString, options)
+        network.on('configChange', configChange)
+        network.on("click", networkClick)  #rebuilt network, so rebuild click
 
 
     document['SHORTHANDS'].bind('input', onShortHands)
     document['console'].bind('dblclick', doSomething)
-    document['optionizer'].bind('click', getOptions)
+    for buttonID in 'physics nodes edges other toggle'.split():
+        document[buttonID].bind('click', getOptions)
+
     print('filename',filename)
     loadFileName(filename)
 

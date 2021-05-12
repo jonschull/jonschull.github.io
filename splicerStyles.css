@@ -6,18 +6,7 @@
     left: 0;
 }
 
-
-td.scrollable {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: auto;
-    overflow-y:scroll
-}
-
 .vis-configuration-wrapper{
-
 }
 
 #mynetwork {
@@ -41,7 +30,6 @@ table,td,th{
             font-size:10px; }
 
 #console{height:200px;
-         width:90%;
          resize:both;
          font-size:10px;
          overflow-y:scroll;
