@@ -74,17 +74,16 @@
           physics: true,
           configure: {enabled:false,filter:'physics'}
         }
-        //options['configure']['enabled']=true;
-        //options['configure']['container']=document.getElementById('configurator')
+        options['configure']['enabled']=true;
+        options['configure']['container']=document.getElementById('configurator')
 
-
-        //options["layout"]={  "improvedLayout": true, "hierarchical":{
-        //                              "shakeTowards": 'roots',
-        //                              "enabled": true,
-        //                              "direction": 'LR',
-        //                              "sortMethod": "directed",
-        //                              "nodeSpacing":1,
-        //                              "treeSpacing":1}}
+        options["layout"]={  "improvedLayout": true, "hierarchical":{
+                                      "shakeTowards": 'roots',
+                                      "enabled": true,
+                                      "direction": 'LR',
+                                      "sortMethod": "directed",
+                                      "nodeSpacing":1,
+                                      "treeSpacing":1}}
 
         let network = null
 
@@ -111,5 +110,7 @@
           const nodePositions = JSON.parse(positionsElement.value)
           nodePositions.forEach(nodePosition => data.nodes.update(nodePosition))
           initGraph(false)
+          //THIS makes extract position work!!!
+          nodePositions.forEach(nodePosition => data.nodes.update(nodePosition))
         })
         </script>
