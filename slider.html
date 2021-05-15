@@ -100,12 +100,26 @@
     from imports.nodeStuff import dataAndOptions, getNodes
 
 
-    def refreshGraph(graphString='a:b\n',modifiedOptions=None):
-        data, options = dataAndOptions(graphString)
+    def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
+        data, options = dataAndOptions(graphString) #Fix: this is not needed if modifiedNodes AND modified Options
         options = modifiedOptions or options
-        #options['configure']= {'enabled':True,
-        #            'filter': 'physics'
-        #            }
+        ######
+
+        #options['layout']['improvedLayout'] = False
+
+        #options = {
+        #  'layout': {'improvedLayout': False},
+        #  'edges': {'smooth': False},
+        #  'configure':True,
+        #  'physics': False}
+
+        options['layout']['improvedLayoute']= False
+        options['edges']['smooth']=False
+        options['physics'] = False
+
+
+        data = modifiedData or data
+        print('refeshed data', data['nodes'])
         network = window.vis.Network.new(document['mynetwork'], data, options)
         return (data, options, network)
 
@@ -228,13 +242,10 @@
                         preNodes[i]['PARENT'] = preNodes[i-j]  #parents
                         break # We now know our parent
 
-        #print()
         for i,preNode in enumerate(preNodes):
             line=preNode['RAW']
 
-            #line, linkto, lineID
-
-            #### extract components for future use. TODO could be function
+            #### extract components for future use.
             if '/' in line: #split off addenda
                 line, addenda = line[:line.find('/')], line[line.find('/')+1 :]
                 addenda=addenda.strip()
@@ -318,12 +329,16 @@
     def doSomething(ev,filter='nodes'):
         print('doSomething')
 
+    def pythonize(ev):
+        return JSON.parse(JSON.stringify(ev))
+
     def configChange(ev):
         global options
         print('configChange', JSON.stringify(ev))
-        parsed = JSON.parse(JSON.stringify(ev))
-        for key in parsed: #there should actually be one key
+        parsed = pythonize(ev) #JSON.parse(JSON.stringify(ev))  #
+        for key in parsed: #there should actually be only one key
             options[key] = parsed[key]
+            #this updates the global object. getOptions will persist them.
 
     def getOptions(ev):
         global data, options, graphString, network
@@ -337,7 +352,19 @@
             options['configure']['enabled']=True
             options['configure']['filter'] = ev.target.id
 
-        data, options, network = refreshGraph(graphString, options) #this will update options
+        if ev.target.id == 'other':
+            parsed = pythonize(network.getPositions())# JSON.parse(JSON.stringify( network.getPositions()))
+            nodes=data['nodes']
+            for i,node in enumerate(nodes):
+                id = node['id']
+                node['x'] = parsed[id]['x']
+                node['y'] = parsed[id]['y']
+            data['nodes']=nodes
+            print('nodes with xy', data['nodes'])
+            #options['manipulation']= { 'enabled': true } #this turns on interactive editing
+
+        data, options, network = refreshGraph(graphString, modifiedOptions=options, modifiedData=data) #this will update options
+        print('returned data',data)
         network.on('configChange', configChange)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
 
