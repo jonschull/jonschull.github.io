@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://visjs.github.io/vis-network/dist/vis-network.min.js"></script>
+<script type="text/javascript"  src="https://cdn.jsdelivr.net/npm/brython@3.9.0/brython.min.js">     </script>
+<script type="text/javascript"  src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.8/brython_stdlib.js"></script>
+<script type="text/javascript"  src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+<body onload="brython()">
+    <div id='console'></div>
+
+<script type="text/python">
+from browser import document, window, load
+from browser.html import *
+from javascript import JSON
+
+def redirectOutputs():
+    document <= DIV(PRE(ID='console',  contenteditable='true'))
+    import sys
+    class MyOutput:
+        def __init__(self):
+            self.console = document["console"]
+        def write(self, text):
+            self.console.html +=  text + '</hr>'
+    sys.stdout = MyOutput()
+    sys.stderr = MyOutput()
+redirectOutputs()
+
+
+#// create a DataSet
+data = window.vis.DataSet.new();
+
+#// add items
+data.add([
+  {'id': 1, 'text': 'item 1'},
+  {'id': 2, 'text': 'item 2'},
+  {'id': 3, 'text': 'item 3'}
+]);
+
+#// update an item
+data.updateOnly({'id': 1, 'text': 'item newly 1 (updated)'});
+
+#// remove an item
+#data.remove(3);
+
+def pythonize(ev):
+    return JSON.parse(JSON.stringify(ev))
+
+pyData = pythonize(data.get())
+for i,d in enumerate(pyData):
+    print(pyData[i])
+
+
+</script>
+</body>
+</html>
