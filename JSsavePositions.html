@@ -108,9 +108,9 @@
 
         document.getElementById('load-positions').addEventListener('click', e => {
           const nodePositions = JSON.parse(positionsElement.value)
-          nodePositions.forEach(nodePosition => data.nodes.update(nodePosition))
+          //nodePositions.forEach(nodePosition => data.nodes.update(nodePosition))
           initGraph(false)
-          //THIS makes extract position work!!!
+          //THIS makes extract position work!!!: position nodes AFTER redoing the graph
           nodePositions.forEach(nodePosition => data.nodes.update(nodePosition))
         })
         </script>

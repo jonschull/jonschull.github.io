@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        table {
+            width:100%;
+            height:800px;
+            border: 1px solid lightgray;
+        }
+        textarea {width:100%}
+        td {width:50%}
+
+        #graph {
+          border: 1px solid lightgray;
+        }
+
+        #positions {
+          min-height: 60px;
+          border: 1px solid lightgray;
+        }
+
+        #configurator {
+          min-height: 60px;
+          border: 1px solid lightgray;
+        }
+        </style>
+    </head>
+    <script src="https://visjs.github.io/vis-network/dist/vis-network.min.js"></script>
+    <script type="text/javascript"  src="https://cdn.jsdelivr.net/npm/brython@3.9.0/brython.min.js">     </script>
+
+    <body onload="brython()">
+
+        <table>
+            <tr>
+                <td>
+                    <button id="generate-graph">Generate graph</button>
+                    <button id="extract-positions">Extract positions</button>
+                    <button id="load-positions">Load positions</button>
+                    </td>
+                <td>right
+                    </td>
+                </tr>
+            <tr>
+                <td>
+                    <textarea id="positions"></textarea>
+                    </td>
+                <td><div id='configurator'>configurator
+                    </div>
+                    </td>
+                </tr>
+            <tr>
+                <td>
+                    <div id="container"></div>
+                    </td>
+                <td><</td>
+                </tr>
+            </table>
+
+
+    <script type="text/python">
+        from browser import document, html, window, load
+        from javascript import JSON
+        D=document
+        D<='brython'
+
+        nodes = window.vis.DataSet.new(
+           [dict(id=1,label=1),
+            dict(id=2,label=2),
+            dict(id=3,label=3),
+            dict(id=4,label=4)]
+            )
+        edges = window.vis.DataSet.new(
+            [{'from' : 1, 'to': 2},
+            {'from' : 1, 'to': 3},
+            {'from' : 1, 'to': 4},
+            {'from' : 3, 'to': 4}]
+            )
+        data=dict(nodes=nodes, edges=edges)
+
+        options=dict()
+        options['edges'] = dict(smooth = False)
+        options['physics'] = True
+        options['configure']=dict()
+        options['configure']['enabled']=False
+        options['configure']['enabled'] = 'nodes'
+        options['configure']['enabled']= True;
+        options['configure']['container'] = D['configurator']
+        options["layout"]={"improvedLayout": True,
+                             "hierarchical":{
+                                      "shakeTowards": 'roots',
+                                      "enabled": True,
+                                      "direction": 'LR',
+                                      "sortMethod": "directed",
+                                      "nodeSpacing":1,
+                                      "treeSpacing":1}}
+        options['configure']['enabled']=True
+
+        def initGraph(ev):
+            global network, data, options
+            D['configurator'].html='clear'
+            network =  window.vis.Network.new(D['container'], data, options)
+        D['generate-graph'].bind('click',initGraph)
+
+        def pythonize(ev):
+            return JSON.parse(JSON.stringify(ev))
+
+        def extractPositions(ev):
+            network.storePositions()
+            D['positions'].text = pythonize(network.getPositions())
+        D['extract-positions'].bind('click', extractPositions )
+
+        def loadPositions(ev):
+            initGraph(ev)
+            for nodePosition in pythonize(JSON.parse(D['positions'.text])):
+                data['nodes'].update(nodePosition)
+        D['load-positions'].bind('click', loadPositions)
+
+
+        </script>
+
+
+    </body>
+    </html>
