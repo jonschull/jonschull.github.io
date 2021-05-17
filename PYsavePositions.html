@@ -4,7 +4,7 @@
     <style>
         #graph {
           width: 100%;
-          height: 300px;
+          height: 800px;
           border: 1px solid lightgray;
         }
 
@@ -34,7 +34,7 @@
                     <button id="generate-graph">Generate graph</button>
                     <button id="extract-positions">Extract positions</button>
                     <button id="load-positions">Load positions</button>
-                    <textarea id="positions"></textarea>
+                    <div><pre id="positions" contenteditable = True></pre></div>
                     <div id="graph"></div></td>
                 <td><div id='configurator'>configurator</div></td>
             </tr></tbody>
@@ -78,8 +78,8 @@
                                       "sortMethod": "directed",
                                       "nodeSpacing":1,
                                       "treeSpacing":1}}
-        options['configure']['enabled']= False;
-        def showData(s):
+
+        def showData(s): #utility
             pyData = pythonize(data['nodes'].get())
             print('\nShowData', s)
             for i,d in enumerate(pyData):
@@ -89,43 +89,32 @@
             global network, data, options
             D['configurator'].html='clear'
             network =  window.vis.Network.new(D['graph'], data, options)
-            showData('initgraph')
-            #network.storePositions()
-            showData('initgraph after storePos')
-
-
         D['generate-graph'].bind('click',initGraph)
 
-        def pythonize(ev):
+        def pythonize(ev): #make javascript objects printable
             return JSON.parse(JSON.stringify(ev))
 
         def extractPositions(ev): #a single dictionary
             network.storePositions()
             D['positions'].text = JSON.stringify(network.getPositions())  #brackets needed
-            showData('extractPositions')
+            print(pythonize(network.getPositions()))
         D['extract-positions'].bind('click', extractPositions )
 
         def loadPositions(ev):
             global network, data, options
-            #showData('loadPositions TOP')
             initGraph(ev)
-            #showData('loadPositions TOP2')
-            print('Dtext', D['positions'].text)
+            #print('Dtext', D['positions'].text)
             nodePositions = JSON.parse(D['positions'].text)
             NP = pythonize(nodePositions)
-            print('NP   ', NP)
+            print('NP', NP)
             for k,v in NP.items():
                 x=v['x']
                 y=v['y']
                 NNP = dict(id= k, label=k, x=x, y=y) #NewNodePosition
-                print('NNP   ', NNP)
                 data['nodes'].update(NNP)
-            showData('loadPositions,BOTTOM')
 
 
         D['load-positions'].bind('click', loadPositions)
-        #window.document.getElementById('load-positions').addEventListener('click',loadPositions,{'passive': True})
-
         </script>
 
 
