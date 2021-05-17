@@ -36,7 +36,7 @@
                     <button id="load-positions">Load positions</button>
                     <div><pre id="positions" contenteditable = True></pre></div>
                     <div id="graph"></div></td>
-                <td><div id='configurator'>configurator</div></td>
+                <td><div id='configurator'></div></td>
             </tr></tbody>
 
 
@@ -47,11 +47,12 @@
         D=document
 
         nodes = window.vis.DataSet.new(
-           [dict(id='1',label=1),
-            dict(id='2',label=2),
-            dict(id='3',label=3),
-            dict(id='4',label=4)]
-            )
+           [dict(id='1',label='1'),
+            dict(id='2',label='2'),
+            dict(id='3',label='3'),
+            dict(id='4',label='4')]
+        )#ids and labels should be strings
+        
         edges = window.vis.DataSet.new(
             [{'from': '1', 'to': '2'},
             {'from' : '1', 'to': '3'},
@@ -112,7 +113,6 @@
                 y=v['y']
                 NNP = dict(id= k, label=k, x=x, y=y) #NewNodePosition
                 data['nodes'].update(NNP)
-
 
         D['load-positions'].bind('click', loadPositions)
         </script>
