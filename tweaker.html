@@ -52,6 +52,7 @@
                             +TH('tweaker'
                                 +BR()
                                 +BUTTON('Store Positions', id='other')
+                                +BUTTON('Load Positions', id='loadPositions')
                                 ))
                         )
                         +TR (TD('Shorthands!!!',ID='SHORTHANDS',   contenteditable='true')
@@ -109,13 +110,17 @@
 
     def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
         data, options = dataAndOptions(graphString) #Fix: this is not needed if modifiedNodes AND modified Options
+        data['nodes'] = window.vis.DataSet.new(data['nodes'])
+        data['edges'] = window.vis.DataSet.new(data['edges'])
+
         options = modifiedOptions or options
         options['layout']['improvedLayout']= False
         options['edges']['smooth']=False
-        options['physics'] = True
+        #options['physics'] = True
         options['configure']['container'] = document['tweaker']
 
         data = modifiedData or data
+        document['tweaker'].html = 'clear'
         network = window.vis.Network.new(document['mynetwork'], data, options)
         return (data, options, network)
 
@@ -194,7 +199,7 @@
         mergedNodes=[]
 
         oldNodes = {} #a dict of diagrammed nodes, indexed by ID, but now with upper case keys
-        for node in data['nodes']:
+        for node in pythonize(data['nodes'].get()):
             uppered={}
             for k,v in node.items():
                 uppered[k.upper()] = v
@@ -352,29 +357,41 @@
 
         if ev.target.id == 'other':
             parsed = pythonize(network.getPositions())# JSON.parse(JSON.stringify( network.getPositions()))
-            nodes=data['nodes']
+            nodes=pythonize(data['nodes'].get())
             for i,node in enumerate(nodes):
                 id = node['id']
                 node['x'] = parsed[id]['x']
                 node['y'] = parsed[id]['y']
-            data['nodes']=nodes
-            #print('nodes with xy', data['nodes'])
             lines=[]
             for N in nodes:
                 for k,v in N.items():
                     if v:
                         lines.append((k.upper() +' '+ str(v)))
-                print(lines.append('\n'))
-            print('\n'.join(lines))
+                lines.append('\n')
             fillLEFT('\n'.join(lines))
+            network.storePositions() #This is needed.  (but why?)
 
             #options['manipulation']= { 'enabled': true } #this turns on interactive editing
 
+        document['tweaker'].html='clear'
         data, options, network = refreshGraph(graphString, modifiedOptions=options, modifiedData=data) #this will update options
-        print('returned data',data)
+
+        """#NONE OF THIS DOES ANYTHING
+        nodes = pythonize(data['nodes'].get())
+        print('returned data',nodes)
+        for node in nodes:
+            data['nodes'].update(node)
+        print('repositionedNodes DATASET', pythonize(data['nodes'].get()))
+        """
+
         network.on('configChange', configChange)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
 
+    def loadPositions(ev):
+        nodes = pythonize(data['nodes'].get())
+        for node in nodes:
+            data['nodes'].update(node)
+    document['loadPositions'].bind('click', loadPositions)
 
     document['SHORTHANDS'].bind('input', onShortHands)
     document['console'].bind('dblclick', doSomething)
