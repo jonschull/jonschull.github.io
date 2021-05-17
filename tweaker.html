@@ -48,9 +48,11 @@
                                 +BUTTON('physics', id='physics')
                                 +BUTTON('nodes', id='nodes')
                                 +BUTTON('edges', id='edges')
-                                +BUTTON('other', id='other')
                             )
-                            +TH('tweaker'))
+                            +TH('tweaker'
+                                +BR()
+                                +BUTTON('Store Positions', id='other')
+                                ))
                         )
                         +TR (TD('Shorthands!!!',ID='SHORTHANDS',   contenteditable='true')
                             +TD('Text goes here!!!',ID='LEFT',  contenteditable='true')
@@ -113,9 +115,7 @@
         options['physics'] = True
         options['configure']['container'] = document['tweaker']
 
-
         data = modifiedData or data
-        print('refeshed data', data['nodes'])
         network = window.vis.Network.new(document['mynetwork'], data, options)
         return (data, options, network)
 
@@ -338,8 +338,6 @@
 
     def getOptions(ev):
         global data, options, graphString, network
-        #print(document['mynetwork'].text)
-        print('ev.text', ev.target.id)
 
         if ev.target.id == 'toggle':
             options['configure']['enabled'] = not options['configure']['enabled']
@@ -360,7 +358,16 @@
                 node['x'] = parsed[id]['x']
                 node['y'] = parsed[id]['y']
             data['nodes']=nodes
-            print('nodes with xy', data['nodes'])
+            #print('nodes with xy', data['nodes'])
+            lines=[]
+            for N in nodes:
+                for k,v in N.items():
+                    if v:
+                        lines.append((k.upper() +' '+ str(v)))
+                print(lines.append('\n'))
+            print('\n'.join(lines))
+            fillLEFT('\n'.join(lines))
+
             #options['manipulation']= { 'enabled': true } #this turns on interactive editing
 
         data, options, network = refreshGraph(graphString, modifiedOptions=options, modifiedData=data) #this will update options
