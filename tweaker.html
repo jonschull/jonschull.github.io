@@ -34,7 +34,6 @@
         sys.stderr = MyOutput()
     redirectOutputs()
 
-    #print('filename', filename)
     document <= DIV(
             TABLE(  THEAD(TR( TH('ShortHands')
                             +TH('Filename '
@@ -42,16 +41,18 @@
                                 + BUTTON('Save', id='Save')
                                 + SPAN(id='status')
                                 + BUTTON('Load', id='Load') )
-                            +TH('Diagram'
+                            +TH(BUTTON('center', id='Center')
+                                +'Diagram'
                                 +BR()
                                 +BUTTON('Store Positions', id='storePositions')
                                 +BUTTON('Load Positions', id='loadPositions')
                             )
                             +TH(BUTTON('Toggle Options ', id='toggle') + 'tweaker'
                                 +BR()
-                                +BUTTON('physics', id='physics')
+                                +BUTTON('layout', id='layout')
                                 +BUTTON('nodes', id='nodes')
                                 +BUTTON('edges', id='edges')
+                                +BUTTON('physics', id='physics')
                                 ))
                         )
                         +TR (TD('Shorthands!!!',ID='SHORTHANDS',   contenteditable='true')
@@ -71,18 +72,16 @@
             'useSoftTabs': False})
     editor.session.setMode("ace/mode/yaml");
 
-    #print('Available files:\n', [key for key in storage if not key.endswith('.short')] )
 
     def loadFileName(ev):
         global filename
         filename = document['filename'].value
-        print('load', filename )
-        if not filename in storage:
-            print('AVAILABLE FILES', [key for key in storage if not key.endswith('.short')])
+        if not filename or not (filename in storage):
+            print('AVAILABLE FILES')
+            print([key for key in storage if not key.endswith('.short')])
             return
 
         graphString = storage[filename]
-        #print('loaded NONGLOBAL', graphString)
         fillLEFT(graphString)
 
         if filename + '.short' in storage:
@@ -328,6 +327,7 @@
 
     def doSomething(ev,filter='nodes'):
         print('doSomething')
+        network.fit()
 
     def pythonize(ev):
         return JSON.parse(JSON.stringify(ev))
@@ -348,7 +348,7 @@
             if not options['configure']['enabled']:
                 document['tweaker'].html='tweaker'
 
-        if ev.target.id in 'physics nodes edges'.split():
+        if ev.target.id in 'physics nodes edges layout'.split():
             document['tweaker'].html='tweaker'
             options['configure']['enabled']=True
             options['configure']['filter'] = ev.target.id
@@ -374,8 +374,9 @@
         document['tweaker'].html='clear'
         data, options, network = refreshGraph(graphString, modifiedOptions=options, modifiedData=data) #this will update options
         print('physics', options['physics'])
-        if not options['physics']['enabled'] or  ev.target.id == 'storePositions':
-            loadPositions(ev)
+        #if ev.target.id == 'storePositions':
+        loadPositions(ev)
+        network.fit()
 
         network.on('configChange', configChange)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
@@ -384,15 +385,20 @@
         nodes = pythonize(data['nodes'].get())
         for node in nodes:
             data['nodes'].update(node)
+        network.fit()
     document['loadPositions'].bind('click', loadPositions)
 
     document['SHORTHANDS'].bind('input', onShortHands)
     document['console'].bind('dblclick', doSomething)
 
-    for buttonID in 'physics nodes edges storePositions toggle'.split():
+    def fit(ev):
+        global nework
+        network.fit()
+    document['Center'].bind('click', fit)
+
+    for buttonID in 'physics nodes edges storePositions toggle layout'.split():
         document[buttonID].bind('click', getOptions)
 
-    print('filename',filename)
     loadFileName(filename)
 
     </script>
