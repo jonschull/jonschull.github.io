@@ -310,7 +310,7 @@
         graphString=src
     fillLEFT(graphString)
 
-    def onShortClick(ev):
+    """def onShortClick(ev):
         print('shortclick')
         nodes = getNodes(document['LEFT'].text)
         lines=[]
@@ -322,7 +322,7 @@
             for k,v in node.items():
                 line += '/' + k.upper() + ' ' + v
             lines.append(line)
-        document['SHORTHANDS'].html= '<br>'.join(lines)
+        document['SHORTHANDS'].html= '<br>'.join(lines)"""
 
 
     def doSomething(ev,filter='nodes'):

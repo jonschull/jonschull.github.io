@@ -11,12 +11,13 @@
 
 #mynetwork {
     width: 100%;
-    height:500px;
+    height:700px;
     position: static;
     vertical-align:top;
     top:20px;
 }
 table,td,th{
+    min-width:200px;
     table-layout:fixed;
     overflow-x:scroll;
     overflow-y:scroll;

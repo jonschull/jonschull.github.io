@@ -27,7 +27,7 @@
   position: sticky;
   z-index: 1;
   left: 0;
-  min-width: 40px;
+  min-width: 100px;
   background: #ffd;
 	text-transform: capitalize;
 }
@@ -36,7 +36,7 @@
 	top: 0;
   left: auto;
   resize: horizontal;
-  min-width: 40px;
+  min-width: 100px;
   overflow: auto;
 	background: #cff;
   vertical-align: baseline;
