@@ -42,17 +42,16 @@
                                 + BUTTON('Save', id='Save')
                                 + SPAN(id='status')
                                 + BUTTON('Load', id='Load') )
-                            +TH(BUTTON('toggle Options', id='toggle')
-                                +' Diagram'
+                            +TH('Diagram'
+                                +BR()
+                                +BUTTON('Store Positions', id='storePositions')
+                                +BUTTON('Load Positions', id='loadPositions')
+                            )
+                            +TH(BUTTON('Toggle Options ', id='toggle') + 'tweaker'
                                 +BR()
                                 +BUTTON('physics', id='physics')
                                 +BUTTON('nodes', id='nodes')
                                 +BUTTON('edges', id='edges')
-                            )
-                            +TH('tweaker'
-                                +BR()
-                                +BUTTON('Store Positions', id='other')
-                                +BUTTON('Load Positions', id='loadPositions')
                                 ))
                         )
                         +TR (TD('Shorthands!!!',ID='SHORTHANDS',   contenteditable='true')
@@ -120,7 +119,7 @@
         options['configure']['container'] = document['tweaker']
 
         data = modifiedData or data
-        document['tweaker'].html = 'clear'
+        document['tweaker'].html = ''
         network = window.vis.Network.new(document['mynetwork'], data, options)
         return (data, options, network)
 
@@ -355,7 +354,7 @@
             options['configure']['filter'] = ev.target.id
 
 
-        if ev.target.id == 'other':
+        if ev.target.id == 'storePositions':
             parsed = pythonize(network.getPositions())# JSON.parse(JSON.stringify( network.getPositions()))
             nodes=pythonize(data['nodes'].get())
             for i,node in enumerate(nodes):
@@ -370,19 +369,13 @@
                 lines.append('\n')
             fillLEFT('\n'.join(lines))
             network.storePositions() #This is needed.  (but why?)
-
             #options['manipulation']= { 'enabled': true } #this turns on interactive editing
 
         document['tweaker'].html='clear'
         data, options, network = refreshGraph(graphString, modifiedOptions=options, modifiedData=data) #this will update options
-
-        """#NONE OF THIS DOES ANYTHING
-        nodes = pythonize(data['nodes'].get())
-        print('returned data',nodes)
-        for node in nodes:
-            data['nodes'].update(node)
-        print('repositionedNodes DATASET', pythonize(data['nodes'].get()))
-        """
+        print('physics', options['physics'])
+        if not options['physics']['enabled'] or  ev.target.id == 'storePositions':
+            loadPositions(ev)
 
         network.on('configChange', configChange)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
@@ -395,7 +388,8 @@
 
     document['SHORTHANDS'].bind('input', onShortHands)
     document['console'].bind('dblclick', doSomething)
-    for buttonID in 'physics nodes edges other toggle'.split():
+
+    for buttonID in 'physics nodes edges storePositions toggle'.split():
         document[buttonID].bind('click', getOptions)
 
     print('filename',filename)
