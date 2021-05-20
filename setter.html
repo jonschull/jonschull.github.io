@@ -14,7 +14,7 @@
     from browser.local_storage import storage
     from javascript import JSON, jsobj2pyobj
     from browser.html import *
-    STARTING=False
+    STARTING=True
 
     #filename and graphString are GLOBAL
     #...index.html?filename=whatever
@@ -74,6 +74,10 @@
 
 
     def loadFileName(ev):
+        """localStorage/filename -> LEFT
+           localStorage/filename.short -> SHORTHANDS
+           BUG:
+        """
         global filename
         filename = document['filename'].value
         if not filename or not (filename in storage):
@@ -81,14 +85,15 @@
             print([key for key in storage if not key.endswith('.short')])
             return
 
-        graphString = storage[filename]
-        fillLEFT(graphString)
-
         if filename + '.short' in storage:
             shortHands= storage[filename + '.short']
             editor.setValue(shortHands)
 
         document['status'].text = '  loaded'
+
+        graphString = storage[filename]
+        fillLEFT(graphString)
+
         onEdit(ev)
     document['Load'].bind('click', loadFileName)
 
@@ -112,6 +117,9 @@
         data['edges'] = window.vis.DataSet.new(data['edges'])
 
         options = modifiedOptions or options
+        #options['layout']['improvedLayout']= False
+        #options['edges']['smooth']=False
+        #options['physics'] = True
         options['configure']['container'] = document['tweaker']
         POs = parseOptions(graphString)
         for po in POs.keys():
@@ -147,10 +155,11 @@
     def onEdit(ev):
         global data, options, network, graphString
         document['status'].text = 'changed'
-        graphString = document['LEFT'].text
+        #graphString = document['LEFT'].text
         data, options, network = refreshGraph(graphString)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
         network.on('configChange', configChange)
+        #print('onEdit data', data)
     document['LEFT'].bind('input',onEdit)
 
 
@@ -185,10 +194,10 @@
         return preNode, assignedIDs
 
     def splice(preNodes):
-        global STARTING
-        if STARTING:
-            STARTING=False
-            return ''
+        #global STARTING
+        #if STARTING:
+        #    STARTING=False
+        #    return ''
         """interweave nodes and preNodes before sending to fillLeft"""
         #print('splice:', preNodes)
         newLines=[]
@@ -309,6 +318,21 @@
         graphString=src
     fillLEFT(graphString)
 
+    """def onShortClick(ev):
+        print('shortclick')
+        nodes = getNodes(document['LEFT'].text)
+        lines=[]
+        for node in nodes:
+            print(node)
+            line=node['id']+ ':'
+            if 'linkto' in node:
+                line+=node['linkto']
+            for k,v in node.items():
+                line += '/' + k.upper() + ' ' + v
+            lines.append(line)
+        document['SHORTHANDS'].html= '<br>'.join(lines)"""
+
+
     def doSomething(ev,filter='nodes'):
         global options, data, network
         global graphString
@@ -379,8 +403,8 @@
             data['nodes'].update(node)
         network.fit()
     document['loadPositions'].bind('click', loadPositions)
-    document['SHORTHANDS'].bind('input', onShortHands)
 
+    document['SHORTHANDS'].bind('input', onShortHands)
     document['console'].bind('dblclick', doSomething)
 
     def fit(ev):

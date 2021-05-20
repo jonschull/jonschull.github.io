@@ -52,7 +52,7 @@
             dict(id='3',label='3'),
             dict(id='4',label='4')]
         )#ids and labels should be strings
-        
+
         edges = window.vis.DataSet.new(
             [{'from': '1', 'to': '2'},
             {'from' : '1', 'to': '3'},
@@ -88,7 +88,7 @@
 
         def initGraph(ev):
             global network, data, options
-            D['configurator'].html='clear'
+        D['configurator'].html='clear'
             network =  window.vis.Network.new(D['graph'], data, options)
         D['generate-graph'].bind('click',initGraph)
 

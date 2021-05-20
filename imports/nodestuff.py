@@ -68,14 +68,14 @@ def getRecords(graphString):
 def parseOptions(graphString=graphString):
     records = getRecords(graphString)
     newOpts = [record for record in records if record[0] in 'NODES EDGES LAYOUT PHYSICS'.split()]
-    print('records', records)
     options={}
     for newOpt in newOpts:
         nodesOrEdges = newOpt[0].lower()
         options[nodesOrEdges]= dict()
         for opt in newOpt[1:]:
-            k,v = opt.split()
-            options[nodesOrEdges][k.lower()] = v
+            if len(opt.split())>1:
+                k,v = opt.split()
+                options[nodesOrEdges][k.lower()] = v
     return options
 
 
