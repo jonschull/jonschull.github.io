@@ -22,7 +22,7 @@ URL     testsource.html
 options = { "physics"  :{"enabled":True},
             "configure":{"enabled":False},
             "autoResize": True,
-            "layout":{  "improvedLayout": True, "hierarchical":{
+            "layout":{"improvedLayout": True, "hierarchical":{
                                           "shakeTowards": 'roots',
                                           "enabled": True,
                                           "direction": 'LR',
@@ -39,9 +39,12 @@ options = { "physics"  :{"enabled":True},
                          }
              };
 
-def getNodes(graphString=graphString):
-    keywords = 'ID LABEL URL TITLE LINKTO COLOR SHAPE FONT NODES EDGES X Y'.split()
-    #print(getNodes)
+
+
+keywords = 'ID LABEL URL TITLE LINKTO COLOR SHAPE FONT NODES EDGES X Y LAYOUT PHYSICS HIERARCHICAL'.split()
+
+def getRecords(graphString):
+    print(graphString)
     goodLines = []
     graphString = graphString.replace(chr(11),'\n')
     for line in graphString.split('\n'):
@@ -60,8 +63,24 @@ def getNodes(graphString=graphString):
             chunk=chunk.replace('\n'+ keyword,'BREAK'+ keyword)
         lines=chunk.split('BREAK')
         records.append([line.strip() for line in lines if line.strip()])
+    return records #used by getOptions and getNodes
+
+def parseOptions(graphString=graphString):
+    records = getRecords(graphString)
+    newOpts = [record for record in records if record[0] in 'NODES EDGES LAYOUT PHYSICS'.split()]
+    print('records', records)
+    options={}
+    for newOpt in newOpts:
+        nodesOrEdges = newOpt[0].lower()
+        options[nodesOrEdges]= dict()
+        for opt in newOpt[1:]:
+            k,v = opt.split()
+            options[nodesOrEdges][k.lower()] = v
+    return options
 
 
+def getNodes(graphString=graphString):
+    records=getRecords(graphString)
     # convert records into nodes
     nodes = []
     for record in records:

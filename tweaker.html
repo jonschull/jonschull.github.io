@@ -103,7 +103,7 @@
         document['status'].text = '  saved'
     document['Save'].bind('click', saveFileName)
 
-    from imports.nodeStuff import dataAndOptions, getNodes
+    from imports.nodeStuff import dataAndOptions, getNodes, parseOptions
 
 
     def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
@@ -112,10 +112,13 @@
         data['edges'] = window.vis.DataSet.new(data['edges'])
 
         options = modifiedOptions or options
-        options['layout']['improvedLayout']= False
-        options['edges']['smooth']=False
+        #options['layout']['improvedLayout']= False
+        #options['edges']['smooth']=False
         #options['physics'] = True
         options['configure']['container'] = document['tweaker']
+        POs = parseOptions(graphString)
+        for po in POs.keys():
+            options[po] = POs[po]
 
         data = modifiedData or data
         document['tweaker'].html = ''
@@ -302,7 +305,7 @@
         newLines= splice(preNodes)
 
         fillLEFT('\n\n'.join(newLines)) #newlines=mergeLeft(newLines)
-        onEdit(ev) #refresh LEFT pane
+        onEdit(ev) #parse LEFT pane
 
     def fillLEFT(src):
         global graphString
@@ -326,8 +329,16 @@
 
 
     def doSomething(ev,filter='nodes'):
+        global options, data, network
+        global graphString
         print('doSomething')
+        print('PO', parseOptions(graphString))
+        #options['nodes']['color']='blue'
+        data, options, network = refreshGraph(graphString, modifiedOptions=options, modifiedData=data) #this will update options
         network.fit()
+        network.on('configChange', configChange)
+        network.on("click", networkClick)  #rebuilt network, so rebuild click
+
 
     def pythonize(ev):
         return JSON.parse(JSON.stringify(ev))
