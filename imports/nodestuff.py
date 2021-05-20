@@ -44,7 +44,6 @@ options = { "physics"  :{"enabled":True},
 keywords = 'ID LABEL URL TITLE LINKTO COLOR SHAPE FONT NODES EDGES X Y LAYOUT PHYSICS HIERARCHICAL'.split()
 
 def getRecords(graphString):
-    print(graphString)
     goodLines = []
     graphString = graphString.replace(chr(11),'\n')
     for line in graphString.split('\n'):
@@ -131,7 +130,7 @@ def dataAndOptions(graphString= test):
         if optionWord:
             optionKey=optionWord.pop()
             newOptions.append(node)
-            #print('\noptionKey',optionKey, node)
+            print('\noptionKey',optionKey, node)
         else:
             nodes.append(node)
 

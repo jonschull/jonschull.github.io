@@ -58,7 +58,7 @@
                         +TR (TD('Shorthands!!!',ID='SHORTHANDS',   contenteditable='true')
                             +TD('Text goes here!!!',ID='LEFT',  contenteditable='true')
                             +TD(DIV('goes here', id="mynetwork"))
-                            +TD('tweaker',id='tweaker')
+                            +TD(DIV('tweaker',id='tweaker'))
                         ),
                             Class='fixed-headers'),
 
@@ -95,7 +95,6 @@
     def saveFileName(ev):
         global filename
         filename = document['filename'].value
-        #print(window.Date.now(), 'saving  to', filename,':\n', document['LEFT'].text)
         storage[filename] = document['LEFT'].text
 
         shortHands = editor.getValue()    ;  storage[filename+'.short'] = shortHands
@@ -107,25 +106,25 @@
 
 
     def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
-        data, options = dataAndOptions(graphString) #Fix: this is not needed if modifiedNodes AND modified Options
+        data, options = dataAndOptions(graphString)
         data['nodes'] = window.vis.DataSet.new(data['nodes'])
         data['edges'] = window.vis.DataSet.new(data['edges'])
 
         options = modifiedOptions or options
-        options['configure']['container'] = document['tweaker']
         POs = parseOptions(graphString)
         for po in POs.keys():
             options[po] = POs[po]
 
         data = modifiedData or data
         document['tweaker'].html = ''
+        options['configure']['container'] = document['tweaker']
         network = window.vis.Network.new(document['mynetwork'], data, options)
         return (data, options, network)
 
     data, options, network = refreshGraph(graphString)
 
     def networkClick(params): #bound via network.on below
-        print('networkClick', params.nodes)
+        #print('networkClick', params.nodes)
         if params.nodes:
             ID=params.nodes[0]
             URL = [node['url'] for node in nodes if node['id'] == ID][0]
@@ -190,7 +189,6 @@
             STARTING=False
             return ''
         """interweave nodes and preNodes before sending to fillLeft"""
-        #print('splice:', preNodes)
         newLines=[]
         newNodes=preNodes
         mergedNodes=[]
@@ -210,7 +208,6 @@
                 mergedNodes.append(newNode)
 
         for mergedNode in mergedNodes:
-            #print('mergedNode', mergedNode)
             newLine = niceRep(mergedNode, goodKeys='ID LABEL LINKTO TITLE COLOR SHAPE'.split(' '))
             newLine= newLine.replace('/','\n')
             newLines.append(newLine)
@@ -310,16 +307,8 @@
     fillLEFT(graphString)
 
     def doSomething(ev,filter='nodes'):
-        global options, data, network
-        global graphString
-        print('doSomething')
-        print('PO', parseOptions(graphString))
-        #options['nodes']['color']='blue'
-        data, options, network = refreshGraph(graphString, modifiedOptions=options, modifiedData=data) #this will update options
-        network.fit()
-        network.on('configChange', configChange)
-        network.on("click", networkClick)  #rebuilt network, so rebuild click
-
+        print('dos')
+        print('options', pythonize(network.getOptionsFromConfigurator()))
 
     def pythonize(ev):
         return JSON.parse(JSON.stringify(ev))
@@ -365,10 +354,10 @@
 
         document['tweaker'].html='clear'
         data, options, network = refreshGraph(graphString, modifiedOptions=options, modifiedData=data) #this will update options
-        print('physics', options['physics'])
-        #if ev.target.id == 'storePositions':
-        loadPositions(ev)
-        network.fit()
+        #print('physics', options['physics'])
+        if ev.target.id == 'loadPositions':
+            loadPositions(ev)
+            network.fit()
 
         network.on('configChange', configChange)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
