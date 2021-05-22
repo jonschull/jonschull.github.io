@@ -4,6 +4,7 @@
     <script type="text/javascript"  src="https://cdn.jsdelivr.net/npm/brython@3.9.0/brython.min.js">     </script>
     <script type="text/javascript"  src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.8/brython_stdlib.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" type="text/javascript" charset="utf-8"></script>
     <link type="text/css" rel="stylesheet" href="splicerStyles.css">
     <link type="text/css" rel="stylesheet" href="sliderStyles.css">
 
@@ -306,9 +307,17 @@
         graphString=src
     fillLEFT(graphString)
 
+    def yamlizeOptions():
+        networkOptions = pythonize(network.getOptionsFromConfigurator())
+        return pythonize(window.jsyaml.dump(networkOptions))
+
     def doSomething(ev,filter='nodes'):
-        print('dos')
-        print('options', pythonize(network.getOptionsFromConfigurator()))
+        optionsYAML = yamlizeOptions()
+        print('OY', optionsYAML)
+        newSH = editor.getValue()
+        editor.setValue(newSH+'\n\n' + optionsYAML)
+
+
 
     def pythonize(ev):
         return JSON.parse(JSON.stringify(ev))
