@@ -20,7 +20,7 @@ TITLE   This is popup text
 URL     testsource.html
 """
 options = { "physics"  :{"enabled":True},
-            "configure":{"enabled":False},
+            "configure":{"enabled":True},
             "autoResize": True,
             "layout":{"improvedLayout": True, "hierarchical":{
                                           "shakeTowards": 'roots',
@@ -122,12 +122,12 @@ LINKTO 1b 2 3
 """
 def dataAndOptions(graphString= test):
     nodesWithOptions = getNodes(graphString)
-    optionWords = set('nodes edges'.split())
+    optionWords = set('nodes edges physics layout'.split())
 
     nodes=[]; newOptions = []
     for i, node in enumerate(nodesWithOptions):
         optionWord = set(node.keys()).intersection(optionWords)
-        if optionWord:
+        if optionWord: #don't create a node if its an optionWord (like NODES, EDGES etc.)
             optionKey=optionWord.pop()
             newOptions.append(node)
             print('\noptionKey',optionKey, node)

@@ -36,7 +36,9 @@
     redirectOutputs()
 
     document <= DIV(
-            TABLE(  THEAD(TR( TH('ShortHands')
+            TABLE(  THEAD(TR( TH('ShortHands' + BR()
+                                +BUTTON('import Options', id='importOptions')
+                                )
                             +TH('Filename '
                                 + INPUT(filename, id='filename', value=filename)
                                 + BUTTON('Save', id='Save')
@@ -216,7 +218,7 @@
 
     lastKeyStroke=0
     def onShortHands(ev, FORCE=True):
-        global lastKeyStroke, assignedIDs
+        global lastKeyStroke, assignedIDs, options
         now = window.Date.now()
         if not FORCE:
             if  now - lastKeyStroke < 300:
@@ -225,7 +227,16 @@
         lastKeyStroke = now
 
         assignedIDs = set()
+
+        #get options from ShortHand
+        content = editor.getValue()
+        optionsFromContent = None
+        if len(content.split('\noptions:'))>1 :
+            optionsFromContent = '\noptions:\n  ' + content.split('\noptions:')[1].strip()
+        print('OFC',optionsFromContent)
+        print('loaded optionsFromShortHands', pythonize(window.jsyaml.load(optionsFromContent)))
         shortStrings = editor.getValue()
+
         lines=shortStrings.split('\n')
 
         preNodes = [newNode(line) for line in lines if line.strip()]
@@ -258,10 +269,7 @@
             if len(words) == 1: #one word Labels become IDs
                 lineID = words[0].strip()
             else:
-                #### get this right
-                #lineID = IDs.pop(0) #else assign an ID
                 lineID = -1
-
                 #preNode['ADDENDA']= '/ID ' + lineID
 
             #### use line and components carefully
@@ -311,12 +319,18 @@
         networkOptions = pythonize(network.getOptionsFromConfigurator())
         return pythonize(window.jsyaml.dump(networkOptions))
 
-    def doSomething(ev,filter='nodes'):
+    def importOptions(ev):
+        "get options from configureModule, append to ShortHands"
         optionsYAML = yamlizeOptions()
-        print('OY', optionsYAML)
-        newSH = editor.getValue()
-        editor.setValue(newSH+'\n\n' + optionsYAML)
+        print('test parse', pythonize(window.jsyaml.load(optionsYAML)))
+        optionsYAML = 'options:  ' + '\n  '.join(optionsYAML.split('\n'))
+        #print('OY', optionsYAML)
+        newSH = editor.getValue().split('\noptions:')[0] #remove old options
+        editor.setValue(newSH+'\n\n' + optionsYAML.replace('options:', 'options:\n', 1))
+    document['importOptions'].bind('click', importOptions)
 
+    def doSomething(ev):
+        print('doSomething')
 
 
     def pythonize(ev):
@@ -330,36 +344,35 @@
             options[key] = parsed[key]
             #this updates the global object. getOptions will persist them.
 
-    def getOptions(ev):
+    def getOptions(ev=None):
         global data, options, graphString, network
+        if ev:
+            if ev.target.id == 'toggle':
+                options['configure']['enabled'] = not options['configure']['enabled']
+                if not options['configure']['enabled']:
+                    document['tweaker'].html='tweaker'
 
-        if ev.target.id == 'toggle':
-            options['configure']['enabled'] = not options['configure']['enabled']
-            if not options['configure']['enabled']:
+            if ev.target.id in 'physics nodes edges layout'.split():
                 document['tweaker'].html='tweaker'
+                options['configure']['enabled']=True
+                options['configure']['filter'] = ev.target.id
 
-        if ev.target.id in 'physics nodes edges layout'.split():
-            document['tweaker'].html='tweaker'
-            options['configure']['enabled']=True
-            options['configure']['filter'] = ev.target.id
-
-
-        if ev.target.id == 'storePositions':
-            parsed = pythonize(network.getPositions())# JSON.parse(JSON.stringify( network.getPositions()))
-            nodes=pythonize(data['nodes'].get())
-            for i,node in enumerate(nodes):
-                id = node['id']
-                node['x'] = parsed[id]['x']
-                node['y'] = parsed[id]['y']
-            lines=[]
-            for N in nodes:
-                for k,v in N.items():
-                    if v:
-                        lines.append((k.upper() +' '+ str(v)))
-                lines.append('\n')
-            fillLEFT('\n'.join(lines))
-            network.storePositions() #This is needed.  (but why?)
-            #options['manipulation']= { 'enabled': true } #this turns on interactive editing
+            if ev.target.id == 'storePositions':
+                parsed = pythonize(network.getPositions())# JSON.parse(JSON.stringify( network.getPositions()))
+                nodes=pythonize(data['nodes'].get())
+                for i,node in enumerate(nodes):
+                    id = node['id']
+                    node['x'] = parsed[id]['x']
+                    node['y'] = parsed[id]['y']
+                lines=[]
+                for N in nodes:
+                    for k,v in N.items():
+                        if v:
+                            lines.append((k.upper() +' '+ str(v)))
+                    lines.append('\n')
+                fillLEFT('\n'.join(lines))
+                network.storePositions() #This is needed.  (but why?)
+                #options['manipulation']= { 'enabled': true } #this turns on interactive editing
 
         document['tweaker'].html='clear'
         data, options, network = refreshGraph(graphString, modifiedOptions=options, modifiedData=data) #this will update options
