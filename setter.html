@@ -105,8 +105,7 @@
         document['status'].text = '  saved'
     document['Save'].bind('click', saveFileName)
 
-    from imports.nodeStuff import dataAndOptions, getNodes, parseOptions
-
+    from imports.nodeStuff2 import dataAndOptions, getNodes, parseOptions
 
     def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
         data, options = dataAndOptions(graphString)
@@ -156,7 +155,7 @@
     document['LEFT'].bind('input',onEdit)
 
 
-    def niceRep(preNode, goodKeys = 'ID LABEL LINKTO PARENT ADDENDA'.split(' ')):
+    def niceRep(preNode, goodKeys = 'ID LABEL LINKTO PARENT ADDENDA'.lower().split(' ')):
         ret=[]
         for k,v in preNode.items():
             if k in goodKeys:
@@ -164,13 +163,13 @@
         return '/' + '  /'.join(ret)
 
     def newNode(line):
-        return dict( ID=None,
-                        DEPTH = len(line) - len(line.lstrip()),
-                        LINKTO='',
-                        PARENT=None,
-                        PARENTID=None,
-                        LABEL=None,
-                        RAW=line)
+        return dict( id=None,
+                        depth = len(line) - len(line.lstrip()),
+                        linkto='',
+                        parent=None,
+                        parentid=None,
+                        label=None,
+                        raw=line)
 
     IDs = set([str(i) for i in range(1000)][1:])
     def assignID(preNode,line,lineID, addenda, assignedIDs):
@@ -182,7 +181,7 @@
             if lineID==-1 or (lineID in assignedIDs):
                 lineID = list(IDs - assignedIDs)[0]
         # use lineID
-        preNode['ID']= lineID
+        preNode['id']= lineID
         assignedIDs.add(lineID)
         return preNode, assignedIDs
 
@@ -196,22 +195,25 @@
         newNodes=preNodes
         mergedNodes=[]
 
+        """
         oldNodes = {} #a dict of diagrammed nodes, indexed by ID, but now with upper case keys
         for node in pythonize(data['nodes'].get()):
             uppered={}
             for k,v in node.items():
                 uppered[k.upper()] = v
-            oldNodes[uppered['ID']] = uppered
+            oldNodes[uppered['id']] = uppered"""
+
+        oldNodes = pythonize(data['nodes'].get())
 
         for newNode in newNodes:
-            if newNode['ID'] in oldNodes: #merge new shorthand values into oldNode
-                mergedNode = oldNodes[newNode['ID']] | newNode  #MERGE
+            if newNode['id'] in oldNodes: #merge new shorthand values into oldNode
+                mergedNode = oldNodes[newNode['id']] | newNode  #MERGE
                 mergedNodes.append(mergedNode)
             else:
                 mergedNodes.append(newNode)
 
         for mergedNode in mergedNodes:
-            newLine = niceRep(mergedNode, goodKeys='ID LABEL LINKTO TITLE COLOR SHAPE'.split(' '))
+            newLine = niceRep(mergedNode, goodKeys='ID LABEL LINKTO TITLE COLOR SHAPE'.lower().split(' '))
             newLine= newLine.replace('/','\n')
             newLines.append(newLine)
         return newLines
@@ -245,12 +247,12 @@
             my = preNodes[i]
             if i>0: #first guy has no parent
                 for j in range(i+1):
-                    if preNodes[i-j]['DEPTH'] < my['DEPTH']: #found parent
-                        preNodes[i]['PARENT'] = preNodes[i-j]  #parents
+                    if preNodes[i-j]['depth'] < my['depth']: #found parent
+                        preNodes[i]['parent'] = preNodes[i-j]  #parents
                         break # We now know our parent
 
         for i,preNode in enumerate(preNodes):
-            line=preNode['RAW']
+            line=preNode['raw']
 
             #### extract components for future use.
             if '/' in line: #split off addenda
@@ -273,35 +275,35 @@
                 #preNode['ADDENDA']= '/ID ' + lineID
 
             #### use line and components carefully
-            preNode['LABEL']=line.strip()
+            preNode['label']=line.strip()
 
-            if preNode['PARENT']:  #since parent precedes child, parent ID is available for use
-                preNode['PARENTID'] = preNode['PARENT']['ID']
+            if preNode['parent']:  #since parent precedes child, parent ID is available for use
+                preNode['parentID'] = preNode['parent']['id']
 
             ####assign ID and update assignedIDs
             preNode, assignedIDs = assignID(preNode,line,lineID, addenda, assignedIDs)
 
             #Linktos #aggregate linktos for when we get out of the loop
-            if preNode['PARENT']:
-                preNode['PARENT']['LINKTO'] += ' ' + preNode['ID'] #works
+            if preNode['parent']:
+                preNode['parent']['linkto'] += ' ' + preNode['id'] #works
             if linkto:
-                preNode['LINKTO'] += ' ' + linkto
-            #preNode['ADDENDA'] = niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE'.split(' '))
+                preNode['linkto'] += ' ' + linkto
+            #preNode['addenda'] = niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE'.lower().split(' '))
 
         linktos=set() #collect all the linktos for all the nodes
         for preNode in preNodes:
-            for target in preNode['LINKTO'].split(' '):
+            for target in preNode['linkto'].split(' '):
                 linktos.add(target)
 
         #collect all explicit IDs for all the  nodes
-        namedNodes=set([node['ID']for node in preNodes])
+        namedNodes=set([node['id']for node in preNodes])
 
         #create nodes that were mentioned in linktos but not explicitly named
         for ID in linktos-namedNodes: #the linktos that need to be named
             if ID:
                 newPreNode = newNode(ID)
-                newPreNode['ID']=ID
-                newPreNode['LABEL']= ID
+                newPreNode['id']=ID
+                newPreNode['label']= ID
                 preNodes.append(newPreNode)
 
         newLines= splice(preNodes)

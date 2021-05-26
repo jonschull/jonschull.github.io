@@ -41,7 +41,9 @@ options = { "physics"  :{"enabled":True},
 
 
 
-keywords = 'ID LABEL URL TITLE LINKTO COLOR SHAPE FONT NODES EDGES X Y LAYOUT PHYSICS HIERARCHICAL'.split()
+keywords = """"id label url title linkto color shape
+font nodes edges x y layout physics hierarchical border
+borderWidth background opacity hidden""".split()
 
 def getRecords(graphString):
     goodLines = []
@@ -59,24 +61,47 @@ def getRecords(graphString):
     records = []
     for chunk in chunks:
         for keyword in keywords:
-            chunk=chunk.replace('\n'+ keyword,'BREAK'+ keyword)
+            chunk=chunk.replace('\n'+ keyword,'BREAK'+ keyword) #keywords must be at beginning
         lines=chunk.split('BREAK')
         records.append([line.strip() for line in lines if line.strip()])
     return records #used by getOptions and getNodes
 
+
+
 def parseOptions(graphString=graphString):
     records = getRecords(graphString)
-    newOpts = [record for record in records if record[0] in 'NODES EDGES LAYOUT PHYSICS'.split()]
+    newOpts = [record for record in records if record[0] in 'NODES EDGES LAYOUT PHYSICS'.lower().split()]
     options={}
     for newOpt in newOpts:
         nodesOrEdges = newOpt[0].lower()
-        options[nodesOrEdges]= dict()
+        options[nodesOrEdges]= {}
         for opt in newOpt[1:]:
             if len(opt.split())>1:
-                k,v = opt.split()
-                options[nodesOrEdges][k.lower()] = v
-    return options
+                k,vs = opt.split()[0], opt.split()[1:]
 
+                if len(vs)==1:
+                    v=vs[0]
+                    options[nodesOrEdges][k] = v
+
+                if len(vs)==2:
+                    k2, v = vs
+                    if k not in options[nodesOrEdges]: #make sure we have the dict created
+                        options[nodesOrEdges][k]=dict()
+
+                    options[nodesOrEdges][k][k2] = v
+
+                if len(vs)==3: #will fail beyond this
+                    k2, k3, v = vs
+                    if k not in options[nodesOrEdges]:
+                        options[nodesOrEdges][k]=dict()
+
+                    if k2 not in options[nodesOrEdges][k]:
+                        options[nodesOrEdges][k][k2] = dict()
+
+                    options[nodesOrEdges][k][k2][k3] = v
+
+
+    return options
 
 def getNodes(graphString=graphString):
     records=getRecords(graphString)
