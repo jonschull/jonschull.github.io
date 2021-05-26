@@ -1,0 +1,19 @@
+setter
+	labels
+		should come last for extra line
+		need to be proofed for keywords
+	options
+		should be captured and appended instantly
+			this will address color problem
+		eliminate tweaker?
+		color blue prevents handling of color border black
+	editor
+		needs wrap or horizontal scrollbar
+	LEFT wants editor for collapsed options
+		alignment enforcing (or tinting?)
+	column handling needs work
+	store positions changed layout
+	editing ShortHands trounces positions
+	store positions sometmes disrupts layout setting
+	live option setting is flakey
+	initial generator still writing all caps 

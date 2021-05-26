@@ -71,6 +71,7 @@ def getRecords(graphString):
 def parseOptions(graphString=graphString):
     records = getRecords(graphString)
     newOpts = [record for record in records if record[0] in 'NODES EDGES LAYOUT PHYSICS'.lower().split()]
+    print('NO',newOpts)
     options={}
     for newOpt in newOpts:
         nodesOrEdges = newOpt[0].lower()

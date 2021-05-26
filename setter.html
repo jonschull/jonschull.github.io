@@ -231,14 +231,14 @@
         assignedIDs = set()
 
         #get options from ShortHand
-        content = editor.getValue()
-        optionsFromContent = None
-        if len(content.split('\noptions:'))>1 :
-            optionsFromContent = '\noptions:\n  ' + content.split('\noptions:')[1].strip()
-        print('OFC',optionsFromContent)
-        print('loaded optionsFromShortHands', pythonize(window.jsyaml.load(optionsFromContent)))
-        shortStrings = editor.getValue()
+        #content = editor.getValue()
+        #optionsFromContent = None
+        #if len(content.split('\noptions:'))>1 :
+        #    optionsFromContent = '\noptions:\n  ' + content.split('\noptions:')[1].strip()
+        #print('OFC',optionsFromContent)
+        #print('loaded optionsFromShortHands', pythonize(window.jsyaml.load(optionsFromContent)))
 
+        shortStrings = editor.getValue()
         lines=shortStrings.split('\n')
 
         preNodes = [newNode(line) for line in lines if line.strip()]
