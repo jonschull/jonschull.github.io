@@ -186,24 +186,16 @@
         return preNode, assignedIDs
 
     def splice(preNodes):
-        global STARTING
-        if STARTING:
-            STARTING=False
-            return ''
+
         """interweave nodes and preNodes before sending to fillLeft"""
         newLines=[]
         newNodes=preNodes
         mergedNodes=[]
 
-        """
-        oldNodes = {} #a dict of diagrammed nodes, indexed by ID, but now with upper case keys
-        for node in pythonize(data['nodes'].get()):
-            uppered={}
-            for k,v in node.items():
-                uppered[k.upper()] = v
-            oldNodes[uppered['id']] = uppered"""
 
-        oldNodes = pythonize(data['nodes'].get())
+        oldNodes = {} #a dict of diagrammed nodes, indexed by ID, but now with upper case keys
+        for _ in  pythonize(data['nodes'].get()):
+            oldNodes[_['id']]= _
 
         for newNode in newNodes:
             if newNode['id'] in oldNodes: #merge new shorthand values into oldNode
