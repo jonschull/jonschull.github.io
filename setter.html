@@ -318,9 +318,10 @@
             newChunk = '\n'.join(newChunk)
             newChunks.append(newChunk)
 
-        graphString = '\n\n'.join(newChunks)
+        graphString = '\n'.join(newChunks)
         graphString = graphString
         leftEd.setValue(graphString)
+        leftEd.getSession().foldAll()
     fillLEFT(graphString)
 
     def yamlizeOptions():
