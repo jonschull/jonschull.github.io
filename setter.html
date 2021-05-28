@@ -298,14 +298,29 @@
 
         newLines= splice(preNodes)
 
-        fillLEFT('\n\n'.join(newLines)) #newlines=mergeLeft(newLines)
+        fillLEFT('\n'.join(newLines)) #newlines=mergeLeft(newLines)
         onEdit(ev) #parse LEFT pane
 
     def fillLEFT(src):
         global graphString
-        #document['LEFT'].html = '<br>'.join(src.split('\n'))
-        graphString=src
-        leftEd.setValue(src)
+        graphString=src.strip()
+
+        chunks = graphString.split('\n\n')
+        newChunks = []
+        for chunk in chunks:
+            newChunk=[]
+            for i,line in enumerate(chunk.split('\n')):
+                if i==0:
+                    newLine = line
+                else:
+                    newLine = '\t' + line
+                newChunk.append(newLine)
+            newChunk = '\n'.join(newChunk)
+            newChunks.append(newChunk)
+
+        graphString = '\n\n'.join(newChunks)
+        graphString = graphString
+        leftEd.setValue(graphString)
     fillLEFT(graphString)
 
     def yamlizeOptions():
