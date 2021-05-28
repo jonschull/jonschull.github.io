@@ -67,11 +67,11 @@ def getRecords(graphString):
     return records #used by getOptions and getNodes
 
 
-
 def parseOptions(graphString=graphString):
     records = getRecords(graphString)
     newOpts = [record for record in records if record[0] in 'NODES EDGES LAYOUT PHYSICS'.lower().split()]
-    print('NO',newOpts)
+    if newOpts:
+        print('NO',newOpts)
     options={}
     for newOpt in newOpts:
         nodesOrEdges = newOpt[0].lower()
@@ -156,7 +156,6 @@ def dataAndOptions(graphString= test):
         if optionWord: #don't create a node if its an optionWord (like NODES, EDGES etc.)
             optionKey=optionWord.pop()
             newOptions.append(node)
-            print('\noptionKey',optionKey, node)
         else:
             nodes.append(node)
 
