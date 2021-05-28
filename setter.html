@@ -67,14 +67,20 @@
 
                     Class='table-scroll')
 
-    window.ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/');
-    editor = window.ace.edit("SHORTHANDS");
-    editor.setOptions({
-            'showLineNumbers':False,
-            'showInvisibles': True,
-            'useSoftTabs': False})
-    editor.session.setMode("ace/mode/yaml");
-
+    def makeEditors(editorNames = ['SHORTHANDS']):
+        """return a list of editors corresponding to the names"""
+        editors=[]
+        for name in editorNames:
+            window.ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/');
+            editor = window.ace.edit(name);
+            editor.setOptions({
+                    'showLineNumbers':False,
+                    'showInvisibles': True,
+                    'useSoftTabs': False})
+            editor.session.setMode("ace/mode/yaml");
+            editors.append(editor)
+        return editors
+    editor, leftEd = makeEditors(['SHORTHANDS', 'LEFT'])
 
     def loadFileName(ev):
         global filename
@@ -98,7 +104,7 @@
     def saveFileName(ev):
         global filename
         filename = document['filename'].value
-        storage[filename] = document['LEFT'].text
+        storage[filename] = leftEd.getValue()#  document['LEFT'].text
 
         shortHands = editor.getValue()    ;  storage[filename+'.short'] = shortHands
 
@@ -132,7 +138,7 @@
             URL = [node['url'] for node in nodes if node['id'] == ID][0]
             print('URL', URL)
             if URL:
-                document['LEFT'].html = URL; # for a moment,
+                #document['LEFT'].html = URL; # for a moment,
                 aio.run(showFile(URL))       # until this finishes
     network.on("click", networkClick);
 
@@ -148,7 +154,7 @@
     def onEdit(ev):
         global data, options, network, graphString
         document['status'].text = 'changed'
-        graphString = document['LEFT'].text
+        graphString = leftEd.getValue() # document['LEFT'].text
         data, options, network = refreshGraph(graphString)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
         network.on('configChange', configChange)
@@ -221,14 +227,6 @@
         lastKeyStroke = now
 
         assignedIDs = set()
-
-        #get options from ShortHand
-        #content = editor.getValue()
-        #optionsFromContent = None
-        #if len(content.split('\noptions:'))>1 :
-        #    optionsFromContent = '\noptions:\n  ' + content.split('\noptions:')[1].strip()
-        #print('OFC',optionsFromContent)
-        #print('loaded optionsFromShortHands', pythonize(window.jsyaml.load(optionsFromContent)))
 
         shortStrings = editor.getValue()
         lines=shortStrings.split('\n')
@@ -305,8 +303,9 @@
 
     def fillLEFT(src):
         global graphString
-        document['LEFT'].html = '<br>'.join(src.split('\n'))
+        #document['LEFT'].html = '<br>'.join(src.split('\n'))
         graphString=src
+        leftEd.setValue(src)
     fillLEFT(graphString)
 
     def yamlizeOptions():
