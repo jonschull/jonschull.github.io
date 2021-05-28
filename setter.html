@@ -311,9 +311,9 @@
             newChunk=[]
             for i,line in enumerate(chunk.split('\n')):
                 if i==0:
-                    newLine = line
+                    newLine = line.strip()
                 else:
-                    newLine = '\t' + line
+                    newLine = '\t' + line.strip()
                 newChunk.append(newLine)
             newChunk = '\n'.join(newChunk)
             newChunks.append(newChunk)

@@ -45,7 +45,7 @@ keywords = """"id label url title linkto color shape
 font nodes edges x y layout physics hierarchical border
 borderWidth background opacity hidden""".split()
 
-def getRecords(graphString):
+def getChunks(graphString):
     goodLines = []
     graphString = graphString.replace(chr(11),'\n')
     for line in graphString.split('\n'):
@@ -56,8 +56,11 @@ def getRecords(graphString):
             goodLines.append('BREAK\n')
     goodLines = '\n'.join(goodLines).split('BREAK\n')                    #make a string
     chunks = [line.strip() for line in goodLines if line.strip()]        #split it at the BREAKs to make a chunk that will become a record
+    return chunks
 
+def getRecords(graphString):
     #break each chunk at keyword to create records
+    chunks = getChunks(graphString)
     records = []
     for chunk in chunks:
         for keyword in keywords:
