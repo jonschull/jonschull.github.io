@@ -45,7 +45,8 @@ keywords = """"id label url title linkto color shape
 font nodes edges x y layout physics hierarchical border
 borderWidth background opacity hidden""".split()
 
-def getChunks(graphString):
+def getChunks(graphString):  ##OLD
+    #break each chunk at keyword to create records
     goodLines = []
     graphString = graphString.replace(chr(11),'\n')
     for line in graphString.split('\n'):
@@ -56,15 +57,23 @@ def getChunks(graphString):
             goodLines.append('BREAK\n')
     goodLines = '\n'.join(goodLines).split('BREAK\n')                    #make a string
     chunks = [line.strip() for line in goodLines if line.strip()]        #split it at the BREAKs to make a chunk that will become a record
+    print('Chunks', chunks)
+    return chunks
+
+def getChunks(graphString):
+    if graphString.startswith('id '):
+        graphString = graphString[3:]
+    chunks = graphString.split('\nid')
+    chunks = ['id '+chunk for chunk in chunks]
+    print('chunks', chunks)
     return chunks
 
 def getRecords(graphString):
-    #break each chunk at keyword to create records
     chunks = getChunks(graphString)
     records = []
     for chunk in chunks:
-        for keyword in keywords:
-            chunk=chunk.replace('\n'+ keyword,'BREAK'+ keyword) #keywords must be at beginning
+        for keyword in keywords: #we are now assuming indents
+            chunk=chunk.replace('\n\t'+ keyword,'BREAK'+ keyword) #keywords must be at beginning
         lines=chunk.split('BREAK')
         records.append([line.strip() for line in lines if line.strip()])
     return records #used by getOptions and getNodes
