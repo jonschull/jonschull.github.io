@@ -46,14 +46,18 @@ font nodes edges x y layout physics hierarchical border
 borderWidth background opacity hidden""".split()
 
 def getChunks(graphString):
-    if graphString.startswith('id '):
-        graphString = graphString[3:]
-    graphString = graphString.replace('\n\tnodes', '\nid nodes').replace('\nnodes','\nid nodes')
-    chunks = graphString.split('\nid ')
-    chunks = ['id '+chunk for chunk in chunks]
-    chunks = [chunk.replace('id nodes', 'nodes') for chunk in chunks]
-    print('chunks', chunks)
-    return chunks
+    lines = graphString.split('\n')
+    withBreaks = []
+    for line in lines:
+        if not line.startswith('\t'):
+            withBreaks.append('@@' + line)
+        else:
+            withBreaks.append(line)
+
+    rejoined = '\n'.join(withBreaks)
+    ret=[ _ for _  in rejoined.split('@@') if _.strip()]
+    return ret
+
 
 def getRecords(graphString):
     chunks = getChunks(graphString)
@@ -67,9 +71,10 @@ def getRecords(graphString):
 
 def parseOptions(graphString=graphString):
     records = getRecords(graphString)
+    print('Records', records)
     newOpts = [record for record in records if record[0] in 'NODES EDGES LAYOUT PHYSICS'.lower().split()]
     if newOpts:
-        print('NO',newOpts)
+        print('Option?',newOpts)
     options={}
     for newOpt in newOpts:
         nodesOrEdges = newOpt[0].lower()

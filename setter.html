@@ -20,7 +20,7 @@
     #filename and graphString are GLOBAL
     #...index.html?filename=whatever
     filename =  document.query.getfirst('filename') or ''
-    graphString = 'LABEL Welcome!'
+    graphString = 'id Welcome'
 
     ### print and errors will go to console (unless Brython fails)
     def redirectOutputs():
@@ -91,7 +91,8 @@
             return
 
         graphString = storage[filename]
-        fillLEFT(graphString)
+        leftEd.setValue(graphString)
+        leftEd.getSession().foldAll()
 
         if filename + '.short' in storage:
             shortHands= storage[filename + '.short']
@@ -105,6 +106,7 @@
         global filename
         filename = document['filename'].value
         storage[filename] = leftEd.getValue()#  document['LEFT'].text
+        #print('storage',storage[filename])
 
         shortHands = editor.getValue()    ;  storage[filename+'.short'] = shortHands
 
