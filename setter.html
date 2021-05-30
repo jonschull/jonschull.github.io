@@ -35,6 +35,9 @@
         sys.stderr = MyOutput()
     redirectOutputs()
 
+    def pythonize(ev):
+        return JSON.parse(JSON.stringify(ev))
+
     document <= DIV(
             TABLE(  THEAD(TR( TH('ShortHands' + BR()
                                 +BUTTON('import Options', id='importOptions')
@@ -92,7 +95,7 @@
 
         graphString = storage[filename]
         leftEd.setValue(graphString)
-        leftEd.getSession().foldAll()
+        #leftEd.getSession().foldAll()
 
         if filename + '.short' in storage:
             shortHands= storage[filename + '.short']
@@ -119,6 +122,7 @@
         data, options = dataAndOptions(graphString)
         data['nodes'] = window.vis.DataSet.new(data['nodes'])
         data['edges'] = window.vis.DataSet.new(data['edges'])
+        print('as retrieved or modified', pythonize(data['nodes'].get()) )
 
         options = modifiedOptions or options
         POs = parseOptions(graphString)
@@ -126,6 +130,7 @@
             options[po] = POs[po]
 
         data = modifiedData or data
+
         document['tweaker'].html = ''
         options['configure']['container'] = document['tweaker']
         network = window.vis.Network.new(document['mynetwork'], data, options)
@@ -163,7 +168,7 @@
     document['LEFT'].bind('input',onEdit)
 
 
-    def niceRep(preNode, goodKeys = 'ID LABEL LINKTO PARENT ADDENDA'.lower().split(' ')):
+    def niceRep(preNode, goodKeys = 'id label linkto parent addenda'.split(' ')):
         ret=[]
         for k,v in preNode.items():
             if k in goodKeys:
@@ -194,7 +199,6 @@
         return preNode, assignedIDs
 
     def splice(preNodes):
-
         """interweave nodes and preNodes before sending to fillLeft"""
         newLines=[]
         newNodes=preNodes
@@ -212,8 +216,9 @@
             else:
                 mergedNodes.append(newNode)
 
+
         for mergedNode in mergedNodes:
-            newLine = niceRep(mergedNode, goodKeys='ID LABEL LINKTO TITLE COLOR SHAPE'.lower().split(' '))
+            newLine = niceRep(mergedNode, goodKeys='id label linkto title color borderWidth shape'.split(' '))
             newLine= newLine.replace('/','\n')
             newLines.append(newLine)
         return newLines
@@ -280,7 +285,7 @@
                 preNode['parent']['linkto'] += ' ' + preNode['id'] #works
             if linkto:
                 preNode['linkto'] += ' ' + linkto
-            #preNode['addenda'] = niceRep(preNode, goodKeys='ID LABEL LINKTO TITLE'.lower().split(' '))
+            #preNode['addenda'] = niceRep(preNode, goodKeys='id label linkto title borderWidth'.split(' '))
 
         linktos=set() #collect all the linktos for all the nodes
         for preNode in preNodes:
@@ -323,7 +328,7 @@
         graphString = '\n'.join(newChunks)
         graphString = graphString
         leftEd.setValue(graphString)
-        leftEd.getSession().foldAll()
+        #leftEd.getSession().foldAll()
     fillLEFT(graphString)
 
     def yamlizeOptions():
@@ -358,9 +363,6 @@
         newSH = editor.getValue().split('\noptions:')[0] #remove old options
         editor.setValue(newSH+'\n\n' + optionsYAML.replace('options:', 'options:\n', 1))
     document['importOptions'].bind('click', importOptions)
-
-    def pythonize(ev):
-        return JSON.parse(JSON.stringify(ev))
 
     def configChange(ev):
         global options
@@ -412,6 +414,7 @@
 
     def loadPositions(ev):
         nodes = pythonize(data['nodes'].get())
+        print('LPn', nodes)
         for node in nodes:
             data['nodes'].update(node)
         network.fit()
@@ -420,8 +423,7 @@
 
     def doSomething(ev):
         print('doSomething')
-        import collections
-        print(dir(collections))
+
 
 
     document['console'].bind('dblclick', doSomething)

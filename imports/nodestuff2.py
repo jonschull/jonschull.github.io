@@ -71,8 +71,7 @@ def getRecords(graphString):
 
 def parseOptions(graphString=graphString):
     records = getRecords(graphString)
-    print('Records', records)
-    newOpts = [record for record in records if record[0] in 'NODES EDGES LAYOUT PHYSICS'.lower().split()]
+    newOpts = [record for record in records if record[0] in 'nodes edges layout physics'.split()]
     if newOpts:
         print('Option?',newOpts)
     options={}
@@ -114,10 +113,15 @@ def getNodes(graphString=graphString):
     for record in records:
         node = dict(url='') #seems to fix a bug where I get double events on click
         for line in record:
-            key = line.split()[0].lower()
+            key = line.split()[0]
             value = ' '.join(line.split(' ')[1:]).strip()
+            try:
+                value=int(value)
+            except:
+                pass
             node[key] = value
         nodes.append(node)
+    #print('NNNN')
     #[print(node) for node in nodes]
 
     return(nodes)
@@ -132,22 +136,12 @@ def getEdges(nodes):
                                    'to': link})
         return edges
 
-test= """NODES
-COLOR red
-
-
-ID 0
-LABEL
-LINKTO 1 8
-
-ID 1
-LABEL HOW
-THIS
-WORKS
-COLOR lime
-SHAPE circle
-FONT 22
-LINKTO 1b 2 3
+test= """
+id one
+id two
+    label TWO
+id three
+    color green
 """
 def dataAndOptions(graphString= test):
     nodesWithOptions = getNodes(graphString)
