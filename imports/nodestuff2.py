@@ -121,8 +121,8 @@ def getNodes(graphString=graphString):
                 pass
             node[key] = value
         nodes.append(node)
-    #print('NNNN')
-    #[print(node) for node in nodes]
+    print('NNNN')
+    [print(node) for node in nodes]
 
     return(nodes)
 
