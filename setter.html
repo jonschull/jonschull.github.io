@@ -136,6 +136,27 @@
         network = window.vis.Network.new(document['mynetwork'], data, options)
         return (data, options, network)
 
+
+
+    def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
+        data, options = dataAndOptions(graphString)
+        data['nodes'] = window.vis.DataSet.new(data['nodes'])
+        data['edges'] = window.vis.DataSet.new(data['edges'])
+        print('as retrieved or modified', pythonize(data['nodes'].get()) )
+
+        options = modifiedOptions or options
+        POs = parseOptions(graphString)
+        for po in POs.keys():
+            options[po] = POs[po]
+
+        data = modifiedData or data
+
+        document['tweaker'].html = ''
+        options['configure']['container'] = document['tweaker']
+        network = window.vis.Network.new(document['mynetwork'], data, options)
+        return (data, options, network)
+
+
     data, options, network = refreshGraph(graphString)
 
     def networkClick(params): #bound via network.on below
@@ -223,20 +244,15 @@
             newLines.append(newLine)
         return newLines
 
-    lastKeyStroke=0
-    def onShortHands(ev, FORCE=True):
-        global lastKeyStroke, assignedIDs, options
-        now = window.Date.now()
-        if not FORCE:
-            if  now - lastKeyStroke < 300:
-                lastKeyStroke = now
-                return
-        lastKeyStroke = now
 
+    def makePreNodes(shortStrings="a\n\tb:c d"):
         assignedIDs = set()
 
-        shortStrings = editor.getValue()
+        #########
+        #shortStrings = editor.getValue()
+        #########x
         lines=shortStrings.split('\n')
+        #print('lines', lines)
 
         preNodes = [newNode(line) for line in lines if line.strip()]
         # compute parents
@@ -302,7 +318,23 @@
                 newPreNode['id']=ID
                 newPreNode['label']= ID
                 preNodes.append(newPreNode)
+        return preNodes
 
+    lastKeyStroke=0
+    def onShortHands(ev, FORCE=True):
+        global lastKeyStroke, assignedIDs, options
+        now = window.Date.now()
+        if not FORCE:
+            if  now - lastKeyStroke < 300:
+                lastKeyStroke = now
+                return
+        lastKeyStroke = now
+
+        #assignedIDs = set()
+
+        shortStrings = editor.getValue()
+        
+        preNodes = makePreNodes(shortStrings)
         newLines= splice(preNodes)
 
         fillLEFT('\n'.join(newLines)) #newlines=mergeLeft(newLines)
