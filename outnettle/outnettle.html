@@ -1,0 +1,459 @@
+<html>
+<head>
+    <script type="text/javascript"  src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script type="text/javascript"  src="https://cdn.jsdelivr.net/npm/brython@3.9.0/brython.min.js">     </script>
+    <script type="text/javascript"  src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.8/brython_stdlib.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" type="text/javascript" charset="utf-8"></script>
+    <link type="text/css" rel="stylesheet" href="splicerStyles.css">
+    <link type="text/css" rel="stylesheet" href="sliderStyles.css">
+
+</head>
+<body onload="brython({debug:1})">
+    <script type="text/python">
+    from browser import document, html, aio, window, load
+    from browser.local_storage import storage
+    from javascript import JSON, jsobj2pyobj
+    from browser.html import *
+    STARTING=False
+
+    #filename and graphString are GLOBAL
+    #...index.html?filename=whatever
+    filename =  document.query.getfirst('filename') or ''
+    graphString = 'id Welcome'
+
+    ### print and errors will go to console (unless Brython fails)
+    def redirectOutputs():
+        document <= DIV(PRE(ID='console',  contenteditable='true'))
+        import sys
+        class MyOutput:
+            def __init__(self):
+                self.console = document["console"]
+            def write(self, text):
+                self.console.html +=  text + '</hr>'
+        sys.stdout = MyOutput()
+        sys.stderr = MyOutput()
+    redirectOutputs()
+
+    def pythonize(ev):
+        return JSON.parse(JSON.stringify(ev))
+
+    document <= DIV(
+            TABLE(  THEAD(TR( TH('ShortHands' + BR()
+                                +BUTTON('import Options', id='importOptions')
+                                )
+                            +TH('Filename '
+                                + INPUT(filename, id='filename', value=filename)
+                                + BUTTON('Save', id='Save')
+                                + SPAN(id='status')
+                                + BUTTON('Load', id='Load') )
+                            +TH(BUTTON('center', id='Center')
+                                +'Diagram'
+                                +BR()
+                                +BUTTON('Store Positions', id='storePositions')
+                                +BUTTON('Load Positions', id='loadPositions')
+                            )
+                            +TH(BUTTON('Toggle Options ', id='toggle') + 'tweaker'
+                                +BR()
+                                +BUTTON('layout', id='layout')
+                                +BUTTON('nodes', id='nodes')
+                                +BUTTON('edges', id='edges')
+                                +BUTTON('physics', id='physics')
+                                ))
+                        )
+                        +TR (TD('Shorthands!!!',ID='SHORTHANDS',   contenteditable='true')
+                            +TD('Text goes here!!!',ID='LEFT',  contenteditable='true')
+                            +TD(DIV('goes here', id="mynetwork"))
+                            +TD(DIV('tweaker',id='tweaker'))
+                        ),
+                            Class='fixed-headers'),
+
+                    Class='table-scroll')
+
+    def makeEditors(editorNames = ['SHORTHANDS']):
+        """return a list of editors corresponding to the names"""
+        editors=[]
+        for name in editorNames:
+            window.ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/');
+            editor = window.ace.edit(name);
+            editor.setOptions({
+                    'showLineNumbers':False,
+                    'showInvisibles': True,
+                    'useSoftTabs': False})
+            editor.session.setMode("ace/mode/yaml");
+            editors.append(editor)
+        return editors
+    editor, leftEd = makeEditors(['SHORTHANDS', 'LEFT'])
+
+    def loadFileName(ev):
+        global filename
+        filename = document['filename'].value
+        if not filename or not (filename in storage):
+            print('AVAILABLE FILES')
+            print([key for key in storage if not key.endswith('.short')])
+            return
+
+        graphString = storage[filename]
+        leftEd.setValue(graphString)
+        #leftEd.getSession().foldAll()
+
+        if filename + '.short' in storage:
+            shortHands= storage[filename + '.short']
+            editor.setValue(shortHands)
+
+        document['status'].text = '  loaded'
+        onEdit(ev)
+    document['Load'].bind('click', loadFileName)
+
+    def saveFileName(ev):
+        global filename
+        filename = document['filename'].value
+        storage[filename] = leftEd.getValue()#  document['LEFT'].text
+        #print('storage',storage[filename])
+
+        shortHands = editor.getValue()    ;  storage[filename+'.short'] = shortHands
+
+        document['status'].text = '  saved'
+    document['Save'].bind('click', saveFileName)
+
+    from imports.nodeStuff2 import dataAndOptions, getNodes, parseOptions
+
+    def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
+        data, options = dataAndOptions(graphString)
+        data['nodes'] = window.vis.DataSet.new(data['nodes'])
+        data['edges'] = window.vis.DataSet.new(data['edges'])
+        print('as retrieved or modified', pythonize(data['nodes'].get()) )
+
+        options = modifiedOptions or options
+        POs = parseOptions(graphString)
+        for po in POs.keys():
+            options[po] = POs[po]
+
+        data = modifiedData or data
+
+        document['tweaker'].html = ''
+        options['configure']['container'] = document['tweaker']
+        network = window.vis.Network.new(document['mynetwork'], data, options)
+        return (data, options, network)
+
+
+    data, options, network = refreshGraph(graphString)
+
+    def networkClick(params): #bound via network.on below
+        #print('networkClick', params.nodes)
+        if params.nodes:
+            ID=params.nodes[0]
+            URL = [node['url'] for node in nodes if node['id'] == ID][0]
+            print('URL', URL)
+            if URL:
+                #document['LEFT'].html = URL; # for a moment,
+                aio.run(showFile(URL))       # until this finishes
+    network.on("click", networkClick);
+
+    async def showFile(src): #works locally and via server
+        # Text file
+        req = await aio.ajax("GET", src)
+        print('showFile', src, req.statusText)
+        if req.statusText == 'OK':
+            content = JSON.parse(req.data)['content']
+            #document['LEFT'].html = content
+            fillLEFT(content)
+
+    def onEdit(ev):
+        global data, options, network, graphString
+        document['status'].text = 'changed'
+        graphString = leftEd.getValue() # document['LEFT'].text
+        data, options, network = refreshGraph(graphString)
+        network.on("click", networkClick)  #rebuilt network, so rebuild click
+        network.on('configChange', configChange)
+    document['LEFT'].bind('input',onEdit)
+
+
+    def niceRep(preNode, goodKeys = 'id label linkto parent addenda'.split(' ')):
+        ret=[]
+        for k,v in preNode.items():
+            if k in goodKeys:
+                ret.append(f'{k} {v}')
+        return '/' + '  /'.join(ret)
+
+    def newNode(line):
+        return dict( id=None,
+                        depth = len(line) - len(line.lstrip()),
+                        linkto='',
+                        parent=None,
+                        parentid=None,
+                        label=None,
+                        raw=line)
+
+    IDs = set([str(i) for i in range(1000)][1:])
+    def assignID(preNode,line,lineID, addenda, assignedIDs):
+        if addenda: #CURRENTLY MUST BE MANUALLY INSERTED /ID ZERO
+            IDfromAddenda = addenda.split('ID ')
+            if len(IDfromAddenda)>1:
+                lineID = IDfromAddenda[1].split(' ')[0]
+        else:
+            if lineID==-1 or (lineID in assignedIDs):
+                lineID = list(IDs - assignedIDs)[0]
+        # use lineID
+        preNode['id']= lineID
+        assignedIDs.add(lineID)
+        return preNode, assignedIDs
+
+    def splice(preNodes):
+        """interweave nodes and preNodes before sending to fillLeft"""
+        newLines=[]
+        newNodes=preNodes
+        mergedNodes=[]
+
+
+        oldNodes = {} #a dict of diagrammed nodes, indexed by ID, but now with upper case keys
+        for _ in  pythonize(data['nodes'].get()):
+            oldNodes[_['id']]= _
+
+        for newNode in newNodes:
+            if newNode['id'] in oldNodes: #merge new shorthand values into oldNode
+                mergedNode = oldNodes[newNode['id']] | newNode  #MERGE
+                mergedNodes.append(mergedNode)
+            else:
+                mergedNodes.append(newNode)
+
+
+        for mergedNode in mergedNodes:
+            newLine = niceRep(mergedNode, goodKeys='id label linkto title color borderWidth shape'.split(' '))
+            newLine= newLine.replace('/','\n')
+            newLines.append(newLine)
+        return newLines
+
+
+    def makePreNodes(shortStrings="a\n\tb:c d"):
+        assignedIDs = set()
+
+        #########
+        #shortStrings = editor.getValue()
+        #########x
+        lines=shortStrings.split('\n')
+        #print('lines', lines)
+
+        preNodes = [newNode(line) for line in lines if line.strip()]
+        # compute parents
+        for i in range(len(preNodes)):
+            my = preNodes[i]
+            if i>0: #first guy has no parent
+                for j in range(i+1):
+                    if preNodes[i-j]['depth'] < my['depth']: #found parent
+                        preNodes[i]['parent'] = preNodes[i-j]  #parents
+                        break # We now know our parent
+
+        for i,preNode in enumerate(preNodes):
+            line=preNode['raw']
+
+            #### extract components for future use.
+            if '/' in line: #split off addenda
+                line, addenda = line[:line.find('/')], line[line.find('/')+1 :]
+                addenda=addenda.strip()
+            else:
+                addenda = ''
+
+            if ':' in line: #split off linktos
+                line, linkto = line[:line.find(':')], line[line.find(':')+1 :]
+                #linkto=linkto.split()
+            else:
+                linkto=''
+
+            words = line.strip().split(' ')
+            if len(words) == 1: #one word Labels become IDs
+                lineID = words[0].strip()
+            else:
+                lineID = -1
+                #preNode['ADDENDA']= '/ID ' + lineID
+
+            #### use line and components carefully
+            preNode['label']=line.strip()
+
+            if preNode['parent']:  #since parent precedes child, parent ID is available for use
+                preNode['parentID'] = preNode['parent']['id']
+
+            ####assign ID and update assignedIDs
+            preNode, assignedIDs = assignID(preNode,line,lineID, addenda, assignedIDs)
+
+            #Linktos #aggregate linktos for when we get out of the loop
+            if preNode['parent']:
+                preNode['parent']['linkto'] += ' ' + preNode['id'] #works
+            if linkto:
+                preNode['linkto'] += ' ' + linkto
+            #preNode['addenda'] = niceRep(preNode, goodKeys='id label linkto title borderWidth'.split(' '))
+
+        linktos=set() #collect all the linktos for all the nodes
+        for preNode in preNodes:
+            for target in preNode['linkto'].split(' '):
+                linktos.add(target)
+
+        #collect all explicit IDs for all the  nodes
+        namedNodes=set([node['id']for node in preNodes])
+
+        #create nodes that were mentioned in linktos but not explicitly named
+        for ID in linktos-namedNodes: #the linktos that need to be named
+            if ID:
+                newPreNode = newNode(ID)
+                newPreNode['id']=ID
+                newPreNode['label']= ID
+                preNodes.append(newPreNode)
+        return preNodes
+
+    lastKeyStroke=0
+    def onShortHands(ev, FORCE=True):
+        global lastKeyStroke, assignedIDs, options
+        now = window.Date.now()
+        if not FORCE:
+            if  now - lastKeyStroke < 300:
+                lastKeyStroke = now
+                return
+        lastKeyStroke = now
+
+        #assignedIDs = set()
+
+        shortStrings = editor.getValue()
+
+        preNodes = makePreNodes(shortStrings)
+        newLines= splice(preNodes)
+
+        fillLEFT('\n'.join(newLines)) #newlines=mergeLeft(newLines)
+        onEdit(ev) #parse LEFT pane
+
+    def fillLEFT(src):
+        global graphString
+        graphString=src.strip()
+
+        chunks = graphString.split('\n\n')
+        newChunks = []
+        for chunk in chunks:
+            newChunk=[]
+            for i,line in enumerate(chunk.split('\n')):
+                if i==0:
+                    newLine = line.strip()
+                else:
+                    newLine = '\t' + line.strip()
+                newChunk.append(newLine)
+            newChunk = '\n'.join(newChunk)
+            newChunks.append(newChunk)
+
+        graphString = '\n'.join(newChunks)
+        graphString = graphString
+        leftEd.setValue(graphString)
+        #leftEd.getSession().foldAll()
+    fillLEFT(graphString)
+
+    def yamlizeOptions():
+        networkOptions = pythonize(network.getOptionsFromConfigurator())
+        return pythonize(window.jsyaml.dump(networkOptions))
+
+    def importOptions(ev):
+        "get options from configureModule, append to ShortHands"
+        optionsYAML = yamlizeOptions()
+        pythonized = pythonize(window.jsyaml.load(optionsYAML))
+        print('test parse', pythonized)
+
+        import collections
+        from functools import reduce
+
+        def flatten(d, parent_key='', sep='_'):
+            items = []
+            for k, v in d.items():
+                new_key = parent_key + sep + k if parent_key else k
+                if isinstance(v, collections.MutableMapping):
+                    items.extend(flatten(v, new_key, sep=sep).items())
+                else:
+                    items.append((new_key, v))
+            return dict(items)
+
+        print('\nflattened')
+        for item in flatten(pythonized).items():
+            print(item)
+
+        optionsYAML = 'options:  ' + '\n  '.join(optionsYAML.split('\n'))
+        #print('OY', optionsYAML)
+        newSH = editor.getValue().split('\noptions:')[0] #remove old options
+        editor.setValue(newSH+'\n\n' + optionsYAML.replace('options:', 'options:\n', 1))
+    document['importOptions'].bind('click', importOptions)
+
+    def configChange(ev):
+        global options
+        print('configChange', JSON.stringify(ev))
+        parsed = pythonize(ev) #JSON.parse(JSON.stringify(ev))  #
+        for key in parsed: #there should actually be only one key
+            options[key] = parsed[key]
+            #this updates the global object. getOptions will persist them.
+
+    def getOptions(ev=None):
+        global data, options, graphString, network
+        if ev:
+            if ev.target.id == 'toggle':
+                options['configure']['enabled'] = not options['configure']['enabled']
+                if not options['configure']['enabled']:
+                    document['tweaker'].html='tweaker'
+
+            if ev.target.id in 'physics nodes edges layout'.split():
+                document['tweaker'].html='tweaker'
+                options['configure']['enabled']=True
+                options['configure']['filter'] = ev.target.id
+
+            if ev.target.id == 'storePositions':
+                parsed = pythonize(network.getPositions())# JSON.parse(JSON.stringify( network.getPositions()))
+                nodes=pythonize(data['nodes'].get())
+                for i,node in enumerate(nodes):
+                    id = node['id']
+                    node['x'] = parsed[id]['x']
+                    node['y'] = parsed[id]['y']
+                lines=[]
+                for N in nodes:
+                    for k,v in N.items():
+                        if v:
+                            lines.append((k.upper() +' '+ str(v)))
+                    lines.append('\n')
+                fillLEFT('\n'.join(lines))
+                network.storePositions() #This is needed.  (but why?)
+                #options['manipulation']= { 'enabled': true } #this turns on interactive editing
+
+        document['tweaker'].html='clear'
+        data, options, network = refreshGraph(graphString, modifiedOptions=options, modifiedData=data) #this will update options
+        #print('physics', options['physics'])
+        if ev.target.id == 'loadPositions':
+            loadPositions(ev)
+            network.fit()
+
+        network.on('configChange', configChange)
+        network.on("click", networkClick)  #rebuilt network, so rebuild click
+
+    def loadPositions(ev):
+        nodes = pythonize(data['nodes'].get())
+        print('LPn', nodes)
+        for node in nodes:
+            data['nodes'].update(node)
+        network.fit()
+    document['loadPositions'].bind('click', loadPositions)
+    document['SHORTHANDS'].bind('input', onShortHands)
+
+    def doSomething(ev):
+        print('doSomething')
+        for node in data['nodes'].get():
+            print(pythonize(node))
+        for option in options:
+            print(pythonize(options))
+
+
+
+    document['console'].bind('dblclick', doSomething)
+
+    def fit(ev):
+        global nework
+        network.fit()
+    document['Center'].bind('click', fit)
+
+    for buttonID in 'physics nodes edges storePositions toggle layout'.split():
+        document[buttonID].bind('click', getOptions)
+
+    loadFileName(filename)
+
+    </script>
+</body>
+</html>
