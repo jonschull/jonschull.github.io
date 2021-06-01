@@ -9,7 +9,7 @@
     <link type="text/css" rel="stylesheet" href="sliderStyles.css">
 
 </head>
-<body onload="brython()">
+<body onload="brython({debug:1})">
     <script type="text/python">
     from browser import document, html, aio, window, load
     from browser.local_storage import storage
@@ -117,26 +117,6 @@
     document['Save'].bind('click', saveFileName)
 
     from imports.nodeStuff2 import dataAndOptions, getNodes, parseOptions
-
-    def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
-        data, options = dataAndOptions(graphString)
-        data['nodes'] = window.vis.DataSet.new(data['nodes'])
-        data['edges'] = window.vis.DataSet.new(data['edges'])
-        print('as retrieved or modified', pythonize(data['nodes'].get()) )
-
-        options = modifiedOptions or options
-        POs = parseOptions(graphString)
-        for po in POs.keys():
-            options[po] = POs[po]
-
-        data = modifiedData or data
-
-        document['tweaker'].html = ''
-        options['configure']['container'] = document['tweaker']
-        network = window.vis.Network.new(document['mynetwork'], data, options)
-        return (data, options, network)
-
-
 
     def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
         data, options = dataAndOptions(graphString)
@@ -333,7 +313,7 @@
         #assignedIDs = set()
 
         shortStrings = editor.getValue()
-        
+
         preNodes = makePreNodes(shortStrings)
         newLines= splice(preNodes)
 

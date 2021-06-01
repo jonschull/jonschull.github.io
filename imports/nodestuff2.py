@@ -120,10 +120,7 @@ def getNodes(graphString=graphString):
             except:
                 pass
             node[key] = value
-        nodes.append(node)
-    print('NNNN')
-    [print(node) for node in nodes]
-
+        nodes.append(node)    
     return(nodes)
 
 def getEdges(nodes):

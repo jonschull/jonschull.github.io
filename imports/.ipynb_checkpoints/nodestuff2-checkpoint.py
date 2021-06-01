@@ -41,42 +41,70 @@ options = { "physics"  :{"enabled":True},
 
 
 
-keywords = 'ID LABEL URL TITLE LINKTO COLOR SHAPE FONT NODES EDGES X Y LAYOUT PHYSICS HIERARCHICAL'.split()
+keywords = """"id label url title linkto color shape
+font nodes edges x y layout physics hierarchical border
+borderWidth background opacity hidden""".split()
+
+def getChunks(graphString):
+    lines = graphString.split('\n')
+    withBreaks = []
+    for line in lines:
+        if not line.startswith('\t'):
+            withBreaks.append('@@' + line)
+        else:
+            withBreaks.append(line)
+
+    rejoined = '\n'.join(withBreaks)
+    ret=[ _ for _  in rejoined.split('@@') if _.strip()]
+    return ret
+
 
 def getRecords(graphString):
-    goodLines = []
-    graphString = graphString.replace(chr(11),'\n')
-    for line in graphString.split('\n'):
-        line=line.strip()
-        if line.strip():             #keep non-blank lines
-            goodLines.append(line)
-        else:                        #throw out the other
-            goodLines.append('BREAK\n')
-    goodLines = '\n'.join(goodLines).split('BREAK\n')                    #make a string
-    chunks = [line.strip() for line in goodLines if line.strip()]        #split it at the BREAKs to make a chunk that will become a record
-
-    #break each chunk at keyword to create records
+    chunks = getChunks(graphString)
     records = []
     for chunk in chunks:
-        for keyword in keywords:
-            chunk=chunk.replace('\n'+ keyword,'BREAK'+ keyword)
+        for keyword in keywords: #we are now assuming indents
+            chunk=chunk.replace('\n\t'+ keyword,'BREAK'+ keyword) #keywords must be at beginning
         lines=chunk.split('BREAK')
         records.append([line.strip() for line in lines if line.strip()])
     return records #used by getOptions and getNodes
 
 def parseOptions(graphString=graphString):
     records = getRecords(graphString)
-    newOpts = [record for record in records if record[0] in 'NODES EDGES LAYOUT PHYSICS'.split()]
+    newOpts = [record for record in records if record[0] in 'nodes edges layout physics'.split()]
+    if newOpts:
+        print('Option?',newOpts)
     options={}
     for newOpt in newOpts:
         nodesOrEdges = newOpt[0].lower()
-        options[nodesOrEdges]= dict()
+        options[nodesOrEdges]= {}
         for opt in newOpt[1:]:
             if len(opt.split())>1:
-                k,v = opt.split()
-                options[nodesOrEdges][k.lower()] = v
-    return options
+                k,vs = opt.split()[0], opt.split()[1:]
 
+                if len(vs)==1:
+                    v=vs[0]
+                    options[nodesOrEdges][k] = v
+
+                if len(vs)==2:
+                    k2, v = vs
+                    if k not in options[nodesOrEdges]: #make sure we have the dict created
+                        options[nodesOrEdges][k]=dict()
+
+                    options[nodesOrEdges][k][k2] = v
+
+                if len(vs)==3: #will fail beyond this
+                    k2, k3, v = vs
+                    if k not in options[nodesOrEdges]:
+                        options[nodesOrEdges][k]=dict()
+
+                    if k2 not in options[nodesOrEdges][k]:
+                        options[nodesOrEdges][k][k2] = dict()
+
+                    options[nodesOrEdges][k][k2][k3] = v
+
+
+    return options
 
 def getNodes(graphString=graphString):
     records=getRecords(graphString)
@@ -85,11 +113,16 @@ def getNodes(graphString=graphString):
     for record in records:
         node = dict(url='') #seems to fix a bug where I get double events on click
         for line in record:
-            key = line.split()[0].lower()
+            key = line.split()[0]
             value = ' '.join(line.split(' ')[1:]).strip()
+            try:
+                value=int(value)
+            except:
+                pass
             node[key] = value
         nodes.append(node)
-    #[print(node) for node in nodes]
+    print('NNNN')
+    [print(node) for node in nodes]
 
     return(nodes)
 
@@ -103,22 +136,12 @@ def getEdges(nodes):
                                    'to': link})
         return edges
 
-test= """NODES
-COLOR red
-
-
-ID 0
-LABEL
-LINKTO 1 8
-
-ID 1
-LABEL HOW
-THIS
-WORKS
-COLOR lime
-SHAPE circle
-FONT 22
-LINKTO 1b 2 3
+test= """
+id one
+id two
+    label TWO
+id three
+    color green
 """
 def dataAndOptions(graphString= test):
     nodesWithOptions = getNodes(graphString)
@@ -130,7 +153,6 @@ def dataAndOptions(graphString= test):
         if optionWord: #don't create a node if its an optionWord (like NODES, EDGES etc.)
             optionKey=optionWord.pop()
             newOptions.append(node)
-            print('\noptionKey',optionKey, node)
         else:
             nodes.append(node)
 
