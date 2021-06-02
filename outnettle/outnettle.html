@@ -192,8 +192,8 @@
                         raw=line)
 
     #parseShorts
-    IDs = set([str(i) for i in range(1000)][1:])
-    def assignID(preNode,line,lineID, addenda, assignedIDs):
+    #IDs = set([str(i) for i in range(1000)][1:])
+    def XXassignID(preNode,line,lineID, addenda, assignedIDs):
         if addenda: #CURRENTLY MUST BE MANUALLY INSERTED /ID ZERO
             IDfromAddenda = addenda.split('ID ')
             if len(IDfromAddenda)>1:
@@ -232,7 +232,7 @@
         return newLines
 
     #parseShorts
-    def makePreNodes(shortStrings="a\n\tb:c d"):
+    def XXXmakePreNodes(shortStrings="a\n\tb:c d"):
         assignedIDs = set()
 
         #########

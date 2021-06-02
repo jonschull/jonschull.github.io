@@ -1,15 +1,29 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
+# In[1]:
 
 
-shortStrings = """a
-    b:1 2 3
-    c"""
+shortStrings = """Modules
+	ShortHands
+		parse
+		assign IDs
+		splice
+		fillLeft
+	Left
+		refreshGraph
+			dataAndOptions
+				getNodes
+				getEdges
+			window.vis.DataSet
+			parseOptions
+				getRecords
+					getChunks
+	
+"""
 
 
-# In[10]:
+# In[2]:
 
 
 def newNode(line):
@@ -22,7 +36,7 @@ def newNode(line):
                     raw=line)
 
 
-# In[12]:
+# In[3]:
 
 
 def assignID(preNode,line,lineID, addenda, assignedIDs):
@@ -39,8 +53,10 @@ def assignID(preNode,line,lineID, addenda, assignedIDs):
         return preNode, assignedIDs
 
 
-# In[15]:
+# In[4]:
 
+
+IDs = set([str(i) for i in range(1000)][1:])
 
 def makePreNodes(shortStrings=shortStrings):
     assignedIDs = set()
@@ -120,7 +136,7 @@ def makePreNodes(shortStrings=shortStrings):
 print(makePreNodes())
 
 
-# In[1]:
+# In[5]:
 
 
 import subprocess
