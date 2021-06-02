@@ -117,7 +117,7 @@
 
     from imports.nodeStuff2 import dataAndOptions, getNodes, parseOptions
     from imports.parseLeft import nodesEdgesOptions
-    from imports.parseShorts import makePreNodes
+    from imports.parseShorts import makePreNodes, splice
     #from imports.splice import splice
 
     options = { "physics"  :{"enabled":True},
@@ -183,7 +183,7 @@
 
     def pythonize(ev):
         return JSON.parse(JSON.stringify(ev))
-        
+
     def makeGraphString(shortStrings):
         preNodes = makePreNodes(shortStrings)
         newLines= splice(preNodes,priorNodes = pythonize(data['nodes'].get()))
