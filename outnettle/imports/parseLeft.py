@@ -8,7 +8,7 @@
 # Shorthands will be an editor also so options can be collapsed
 # -- and nodes can be collapsed to so they stay into alignment with keywords
 
-# In[1]:
+# In[4]:
 
 
 graphString="""id alts
@@ -51,7 +51,7 @@ edges
 	font size 23"""
 
 
-# In[2]:
+# In[5]:
 
 
 def getChunks(graphString=graphString):
@@ -69,7 +69,7 @@ def getChunks(graphString=graphString):
 getChunks()
 
 
-# In[3]:
+# In[6]:
 
 
 keywords = """"id label url title linkto color shape
@@ -91,7 +91,7 @@ def getRecords(graphString):
 getRecords(graphString)
 
 
-# In[5]:
+# In[7]:
 
 
 def parseOptions(graphString=graphString):
@@ -147,7 +147,7 @@ def parseOptions(graphString=graphString):
 parseOptions()
 
 
-# In[6]:
+# In[8]:
 
 
 def nodesEdgesOptions(graphString=graphString):
@@ -176,7 +176,7 @@ def nodesEdgesOptions(graphString=graphString):
 nodesEdgesOptions()
 
 
-# In[2]:
+# In[3]:
 
 
 import subprocess

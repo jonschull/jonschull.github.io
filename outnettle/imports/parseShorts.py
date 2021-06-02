@@ -39,6 +39,8 @@ def newNode(line):
 # In[3]:
 
 
+IDs = set([str(i) for i in range(1000)][1:])
+
 def assignID(preNode,line,lineID, addenda, assignedIDs):
         if addenda: #CURRENTLY MUST BE MANUALLY INSERTED /ID ZERO
             IDfromAddenda = addenda.split('ID ')
@@ -53,10 +55,9 @@ def assignID(preNode,line,lineID, addenda, assignedIDs):
         return preNode, assignedIDs
 
 
-# In[4]:
+# In[6]:
 
 
-IDs = set([str(i) for i in range(1000)][1:])
 
 def makePreNodes(shortStrings=shortStrings):
     assignedIDs = set()
@@ -133,10 +134,10 @@ def makePreNodes(shortStrings=shortStrings):
             preNodes.append(newPreNode)
     return preNodes
 
-print(makePreNodes())
+makePreNodes()
 
 
-# In[5]:
+# In[7]:
 
 
 import subprocess

@@ -123,7 +123,7 @@
     from imports.parseShorts import makePreNodes
 
 
-    def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
+    def xxrefreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
         data, options = dataAndOptions(graphString)
         data['nodes'] = window.vis.DataSet.new(data['nodes'])
         data['edges'] = window.vis.DataSet.new(data['edges'])
@@ -141,6 +141,43 @@
         network = window.vis.Network.new(document['mynetwork'], data, options)
         return (data, options, network)
 
+
+    options = { "physics"  :{"enabled":True},
+                "configure":{"enabled":True},
+                "autoResize": True,
+                "layout":{"improvedLayout": True, "hierarchical":{
+                                              "shakeTowards": 'roots',
+                                              "enabled": True,
+                                              "direction": 'LR',
+                                              "sortMethod": "directed",
+                                              "nodeSpacing":1,
+                                              "treeSpacing":1}},
+                    "edges":{"smooth": True,
+                             "arrows":{"to":True},
+                             "shadow" : True
+                             },
+                     "nodes":{"shape":"box",
+                              "font" :"14px",
+                              "shadow": True
+                             }
+                 };
+
+
+    def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
+        ret = nodesEdgesOptions(graphString)
+
+        data= dict( nodes = ret['nodes'],
+                    edges = ret['edges'])
+        for k,v in ret['options'].items():
+            options[k] = v
+        #print('options', options.values())
+        data['nodes'] = window.vis.DataSet.new(data['nodes'])
+        data['edges'] = window.vis.DataSet.new(data['edges'])
+
+        document['tweaker'].html = ''
+        options['configure']['container'] = document['tweaker']
+        network = window.vis.Network.new(document['mynetwork'], data, options)
+        return (data, options, network)
 
     data, options, network = refreshGraph(graphString)
 
@@ -180,31 +217,6 @@
             if k in goodKeys:
                 ret.append(f'{k} {v}')
         return '/' + '  /'.join(ret)
-
-    #parseShorts
-    def newNode(line):
-        return dict( id=None,
-                        depth = len(line) - len(line.lstrip()),
-                        linkto='',
-                        parent=None,
-                        parentid=None,
-                        label=None,
-                        raw=line)
-
-    #parseShorts
-    #IDs = set([str(i) for i in range(1000)][1:])
-    def XXassignID(preNode,line,lineID, addenda, assignedIDs):
-        if addenda: #CURRENTLY MUST BE MANUALLY INSERTED /ID ZERO
-            IDfromAddenda = addenda.split('ID ')
-            if len(IDfromAddenda)>1:
-                lineID = IDfromAddenda[1].split(' ')[0]
-        else:
-            if lineID==-1 or (lineID in assignedIDs):
-                lineID = list(IDs - assignedIDs)[0]
-        # use lineID
-        preNode['id']= lineID
-        assignedIDs.add(lineID)
-        return preNode, assignedIDs
 
     def splice(preNodes):
         """interweave nodes and preNodes before sending to fillLeft"""
