@@ -176,19 +176,19 @@ def nodesEdgesOptions(graphString=graphString):
 nodesEdgesOptions()
 
 
-# In[8]:
+# In[2]:
 
 
-try:
-    get_ipython().system('jupyter nbconvert --to python parseLeft.ipynb')
-except:
-    pass
+import subprocess
+if subprocess.run.__doc__:
+    cmd = 'jupyter nbconvert --to python parseLeft.ipynb'
+    subprocess.run(cmd.split(' '))
 
 
-# In[3]:
+# In[ ]:
 
 
-get_ipython().system('ls')
+
 
 
 # In[ ]:

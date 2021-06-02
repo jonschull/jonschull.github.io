@@ -118,11 +118,6 @@
 
     from imports.nodeStuff2 import dataAndOptions, getNodes, parseOptions
 
-    from imports.parseLeft import nodesEdgesOptions
-
-    from imports.parseShorts import makePreNodes
-
-
     def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
         data, options = dataAndOptions(graphString)
         data['nodes'] = window.vis.DataSet.new(data['nodes'])
@@ -181,7 +176,6 @@
                 ret.append(f'{k} {v}')
         return '/' + '  /'.join(ret)
 
-    #parseShorts
     def newNode(line):
         return dict( id=None,
                         depth = len(line) - len(line.lstrip()),
@@ -191,7 +185,6 @@
                         label=None,
                         raw=line)
 
-    #parseShorts
     IDs = set([str(i) for i in range(1000)][1:])
     def assignID(preNode,line,lineID, addenda, assignedIDs):
         if addenda: #CURRENTLY MUST BE MANUALLY INSERTED /ID ZERO
@@ -231,7 +224,7 @@
             newLines.append(newLine)
         return newLines
 
-    #parseShorts
+
     def makePreNodes(shortStrings="a\n\tb:c d"):
         assignedIDs = set()
 
