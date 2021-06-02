@@ -4,22 +4,9 @@
 # In[1]:
 
 
-shortStrings = """Modules
-	ShortHands
-		parse
-		assign IDs
-		splice
-		fillLeft
-	Left
-		refreshGraph
-			dataAndOptions
-				getNodes
-				getEdges
-			window.vis.DataSet
-			parseOptions
-				getRecords
-					getChunks
-	
+shortStrings = """test
+	one 
+	two
 """
 
 
@@ -55,7 +42,7 @@ def assignID(preNode,line,lineID, addenda, assignedIDs):
         return preNode, assignedIDs
 
 
-# In[6]:
+# In[4]:
 
 
 
@@ -135,6 +122,53 @@ def makePreNodes(shortStrings=shortStrings):
     return preNodes
 
 makePreNodes()
+
+
+# In[5]:
+
+
+def niceRep(preNode, goodKeys = 'id label linkto parent addenda'.split(' ')):
+    ret=[]
+    for k,v in preNode.items():
+        if k in goodKeys:
+            ret.append(f'{k} {v}')
+    return '/' + '  /'.join(ret)
+
+
+# In[6]:
+
+
+def splice(preNodes, priorNodes=[]):
+    """interweave nodes and preNodes before sending to fillLeft"""
+    newLines=[]
+    newNodes=preNodes
+    mergedNodes=[]
+
+    oldNodes = {} #a dict of diagrammed nodes, indexed by ID, but now with upper case keys
+    for _ in  priorNodes:
+        oldNodes[_['id']]= _
+
+    if oldNodes:
+        for newNode in newNodes:
+            if newNode['id'] in oldNodes: #merge new shorthand values into oldNode
+                mergedNode = oldNodes[newNode['id']] | newNode  #MERGE
+                mergedNodes.append(mergedNode)
+            else:
+                mergedNodes.append(newNode)
+    if not oldNodes:
+        mergedNodes = oldNodes
+
+    for mergedNode in mergedNodes:
+        newLine = niceRep(mergedNode, goodKeys='id label linkto title color borderWidth shape'.split(' '))
+        newLine= newLine.replace('/','\n')
+        newLines.append(newLine)
+    return newLines
+
+
+# In[ ]:
+
+
+
 
 
 # In[7]:

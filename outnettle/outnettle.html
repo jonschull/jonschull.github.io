@@ -15,7 +15,6 @@
     from browser.local_storage import storage
     from javascript import JSON, jsobj2pyobj
     from browser.html import *
-    STARTING=False
 
     #filename and graphString are GLOBAL
     #...index.html?filename=whatever
@@ -117,30 +116,9 @@
     document['Save'].bind('click', saveFileName)
 
     from imports.nodeStuff2 import dataAndOptions, getNodes, parseOptions
-
     from imports.parseLeft import nodesEdgesOptions
-
     from imports.parseShorts import makePreNodes
-
-
-    def xxrefreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
-        data, options = dataAndOptions(graphString)
-        data['nodes'] = window.vis.DataSet.new(data['nodes'])
-        data['edges'] = window.vis.DataSet.new(data['edges'])
-        print('as retrieved or modified', pythonize(data['nodes'].get()) )
-
-        options = modifiedOptions or options
-        POs = parseOptions(graphString)
-        for po in POs.keys():
-            options[po] = POs[po]
-
-        data = modifiedData or data
-
-        document['tweaker'].html = ''
-        options['configure']['container'] = document['tweaker']
-        network = window.vis.Network.new(document['mynetwork'], data, options)
-        return (data, options, network)
-
+    #from imports.splice import splice
 
     options = { "physics"  :{"enabled":True},
                 "configure":{"enabled":True},
@@ -168,9 +146,10 @@
 
         data= dict( nodes = ret['nodes'],
                     edges = ret['edges'])
-        for k,v in ret['options'].items():
+
+        for k,v in ret['options'].items(): #augment the default options
             options[k] = v
-        #print('options', options.values())
+
         data['nodes'] = window.vis.DataSet.new(data['nodes'])
         data['edges'] = window.vis.DataSet.new(data['edges'])
 
@@ -179,6 +158,7 @@
         network = window.vis.Network.new(document['mynetwork'], data, options)
         return (data, options, network)
 
+    ### initialize
     data, options, network = refreshGraph(graphString)
 
     def networkClick(params): #bound via network.on below
@@ -201,123 +181,13 @@
             #document['LEFT'].html = content
             fillLEFT(content)
 
-    def onEdit(ev):
-        global data, options, network, graphString
-        document['status'].text = 'changed'
-        graphString = leftEd.getValue() # document['LEFT'].text
-        data, options, network = refreshGraph(graphString)
-        network.on("click", networkClick)  #rebuilt network, so rebuild click
-        network.on('configChange', configChange)
-    document['LEFT'].bind('input',onEdit)
-
-
-    def niceRep(preNode, goodKeys = 'id label linkto parent addenda'.split(' ')):
-        ret=[]
-        for k,v in preNode.items():
-            if k in goodKeys:
-                ret.append(f'{k} {v}')
-        return '/' + '  /'.join(ret)
-
-    def splice(preNodes):
-        """interweave nodes and preNodes before sending to fillLeft"""
-        newLines=[]
-        newNodes=preNodes
-        mergedNodes=[]
-
-
-        oldNodes = {} #a dict of diagrammed nodes, indexed by ID, but now with upper case keys
-        for _ in  pythonize(data['nodes'].get()):
-            oldNodes[_['id']]= _
-
-        for newNode in newNodes:
-            if newNode['id'] in oldNodes: #merge new shorthand values into oldNode
-                mergedNode = oldNodes[newNode['id']] | newNode  #MERGE
-                mergedNodes.append(mergedNode)
-            else:
-                mergedNodes.append(newNode)
-
-
-        for mergedNode in mergedNodes:
-            newLine = niceRep(mergedNode, goodKeys='id label linkto title color borderWidth shape'.split(' '))
-            newLine= newLine.replace('/','\n')
-            newLines.append(newLine)
-        return newLines
-
-    #parseShorts
-    def XXXmakePreNodes(shortStrings="a\n\tb:c d"):
-        assignedIDs = set()
-
-        #########
-        #shortStrings = editor.getValue()
-        #########x
-        lines=shortStrings.split('\n')
-        #print('lines', lines)
-
-        preNodes = [newNode(line) for line in lines if line.strip()]
-        # compute parents
-        for i in range(len(preNodes)):
-            my = preNodes[i]
-            if i>0: #first guy has no parent
-                for j in range(i+1):
-                    if preNodes[i-j]['depth'] < my['depth']: #found parent
-                        preNodes[i]['parent'] = preNodes[i-j]  #parents
-                        break # We now know our parent
-
-        for i,preNode in enumerate(preNodes):
-            line=preNode['raw']
-
-            #### extract components for future use.
-            if '/' in line: #split off addenda
-                line, addenda = line[:line.find('/')], line[line.find('/')+1 :]
-                addenda=addenda.strip()
-            else:
-                addenda = ''
-
-            if ':' in line: #split off linktos
-                line, linkto = line[:line.find(':')], line[line.find(':')+1 :]
-                #linkto=linkto.split()
-            else:
-                linkto=''
-
-            words = line.strip().split(' ')
-            if len(words) == 1: #one word Labels become IDs
-                lineID = words[0].strip()
-            else:
-                lineID = -1
-                #preNode['ADDENDA']= '/ID ' + lineID
-
-            #### use line and components carefully
-            preNode['label']=line.strip()
-
-            if preNode['parent']:  #since parent precedes child, parent ID is available for use
-                preNode['parentID'] = preNode['parent']['id']
-
-            ####assign ID and update assignedIDs
-            preNode, assignedIDs = assignID(preNode,line,lineID, addenda, assignedIDs)
-
-            #Linktos #aggregate linktos for when we get out of the loop
-            if preNode['parent']:
-                preNode['parent']['linkto'] += ' ' + preNode['id'] #works
-            if linkto:
-                preNode['linkto'] += ' ' + linkto
-            #preNode['addenda'] = niceRep(preNode, goodKeys='id label linkto title borderWidth'.split(' '))
-
-        linktos=set() #collect all the linktos for all the nodes
-        for preNode in preNodes:
-            for target in preNode['linkto'].split(' '):
-                linktos.add(target)
-
-        #collect all explicit IDs for all the  nodes
-        namedNodes=set([node['id']for node in preNodes])
-
-        #create nodes that were mentioned in linktos but not explicitly named
-        for ID in linktos-namedNodes: #the linktos that need to be named
-            if ID:
-                newPreNode = newNode(ID)
-                newPreNode['id']=ID
-                newPreNode['label']= ID
-                preNodes.append(newPreNode)
-        return preNodes
+    def pythonize(ev):
+        return JSON.parse(JSON.stringify(ev))
+        
+    def makeGraphString(shortStrings):
+        preNodes = makePreNodes(shortStrings)
+        newLines= splice(preNodes,priorNodes = pythonize(data['nodes'].get()))
+        return '\n'.join(newLines)
 
     lastKeyStroke=0
     def onShortHands(ev, FORCE=True):
@@ -329,15 +199,22 @@
                 return
         lastKeyStroke = now
 
-        #assignedIDs = set()
+        graphString = makeGraphString(shortStrings = editor.getValue() )
 
-        shortStrings = editor.getValue()
-
-        preNodes = makePreNodes(shortStrings)
-        newLines= splice(preNodes)
-
-        fillLEFT('\n'.join(newLines)) #newlines=mergeLeft(newLines)
+        fillLEFT(graphString)
         onEdit(ev) #parse LEFT pane
+    document['SHORTHANDS'].bind('input', onShortHands)
+
+
+    def onEdit(ev):
+        global data, options, network, graphString
+        document['status'].text = 'changed'
+        graphString = leftEd.getValue() # document['LEFT'].text
+        data, options, network = refreshGraph(graphString)
+        network.on("click", networkClick)  #rebuilt network, so rebuild click
+        network.on('configChange', configChange)
+    document['LEFT'].bind('input',onEdit)
+
 
     def fillLEFT(src):
         global graphString
@@ -450,7 +327,7 @@
             data['nodes'].update(node)
         network.fit()
     document['loadPositions'].bind('click', loadPositions)
-    document['SHORTHANDS'].bind('input', onShortHands)
+
 
     def doSomething(ev):
         print('doSomething')
@@ -458,9 +335,6 @@
             print(pythonize(node))
         for option in options:
             print(pythonize(options))
-
-
-
     document['console'].bind('dblclick', doSomething)
 
     def fit(ev):

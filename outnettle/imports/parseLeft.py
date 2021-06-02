@@ -1,63 +1,45 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# With this approach
-# --keywords would not need to be upper case
-# --they would get put in to LEFT, not ShortHands
 # 
-# Shorthands will be an editor also so options can be collapsed
-# -- and nodes can be collapsed to so they stay into alignment with keywords
 
-# In[4]:
+# In[9]:
 
 
-graphString="""id alts
-	linkto  refreshGraph one two three
-	borderWidth 12
-	font size 23
-	label alts
-id refreshGraph
-	linkto  dataAndOptions window.vis.DataSet parseOptions
-	color lime
-	label alts
-id dataAndOptions
-	linkto  getNodes getEdges
-	label alts
-id getNodes
+"""plan 
+    allow comments
+    prevent lingering options
+    fix borderWidth on items
+""";
+
+
+# In[1]:
+
+
+graphString="""id test
+	linkto  one two
+	label test
+	borderWidth
+id one
+	label one
 	linkto
-	label getNodes
-id getEdges
+id two
 	linkto
-	label getEdges
-id window.vis.DataSet
-	linkto
-	label window.vis.DataSet
-id parseOptions
-	linkto  getRecords
-	label parseOptions
-id getRecords
-	linkto  getChunks
-	label getRecords
-id getChunks
-	linkto
-	label getChunks
+	label two
 nodes
-	color orange
-	borderWidth 15
-	font size 23
-    
-edges
-	color red
-	font size 23"""
+	borderWidth 3
+"""
+graphString
 
 
-# In[5]:
+# In[2]:
 
 
 def getChunks(graphString=graphString):
     """each chunk is a string that needs to be converted into a record"""
     lines = graphString.split('\n')
     withBreaks = []
+    print('lines', lines)
     for line in lines:
         if not line.startswith('\t'):
             withBreaks.append('@@' + line)
@@ -69,7 +51,7 @@ def getChunks(graphString=graphString):
 getChunks()
 
 
-# In[6]:
+# In[3]:
 
 
 keywords = """"id label url title linkto color shape
@@ -91,7 +73,7 @@ def getRecords(graphString):
 getRecords(graphString)
 
 
-# In[7]:
+# In[4]:
 
 
 def parseOptions(graphString=graphString):
@@ -117,6 +99,7 @@ def parseOptions(graphString=graphString):
         for opt in newOpt[1:]:
             if len(opt.split())>1:
                 k,vs = opt.split()[0], opt.split()[1:]
+                ###################
                 if k=='linkto':  #don't turn into dictionaries
                     options[kind][k]=' '.join(vs) #leave linktos as space delimited 'ONE TWO THREE'
                     break
@@ -147,7 +130,7 @@ def parseOptions(graphString=graphString):
 parseOptions()
 
 
-# In[8]:
+# In[5]:
 
 
 def nodesEdgesOptions(graphString=graphString):
@@ -173,10 +156,10 @@ def nodesEdgesOptions(graphString=graphString):
 
     return entries
 
-nodesEdgesOptions()
+nodesEdgesOptions()['nodes']
 
 
-# In[3]:
+# In[7]:
 
 
 import subprocess
