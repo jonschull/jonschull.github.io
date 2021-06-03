@@ -32,14 +32,14 @@ nodes
 graphString
 
 
-# In[2]:
+# In[10]:
 
 
 def getChunks(graphString=graphString):
     """each chunk is a string that needs to be converted into a record"""
     lines = graphString.split('\n')
     withBreaks = []
-    print('lines', lines)
+    #print('lines', lines)
     for line in lines:
         if not line.startswith('\t'):
             withBreaks.append('@@' + line)
@@ -159,7 +159,7 @@ def nodesEdgesOptions(graphString=graphString):
 nodesEdgesOptions()['nodes']
 
 
-# In[7]:
+# In[11]:
 
 
 import subprocess

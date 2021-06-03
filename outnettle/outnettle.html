@@ -101,7 +101,7 @@
             editor.setValue(shortHands)
 
         document['status'].text = '  loaded'
-        onEdit(ev)
+        onEdit(ev,loading=True)
     document['Load'].bind('click', loadFileName)
 
     def saveFileName(ev):
@@ -178,7 +178,6 @@
         print('showFile', src, req.statusText)
         if req.statusText == 'OK':
             content = JSON.parse(req.data)['content']
-            #document['LEFT'].html = content
             fillLEFT(content)
 
     def pythonize(ev):
@@ -206,9 +205,10 @@
     document['SHORTHANDS'].bind('input', onShortHands)
 
 
-    def onEdit(ev):
+    def onEdit(ev,loading=False):
         global data, options, network, graphString
-        document['status'].text = 'changed'
+        if not loading:
+            document['status'].text = 'changed'
         graphString = leftEd.getValue() # document['LEFT'].text
         data, options, network = refreshGraph(graphString)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
@@ -236,7 +236,6 @@
         graphString = '\n'.join(newChunks)
         graphString = graphString
         leftEd.setValue(graphString)
-        #leftEd.getSession().foldAll()
     fillLEFT(graphString)
 
     def yamlizeOptions():
