@@ -16,6 +16,10 @@
     from javascript import JSON, jsobj2pyobj
     from browser.html import *
 
+    from imports.nodeStuff2 import dataAndOptions, getNodes, parseOptions
+    from imports.parseLeft import nodesEdgesOptions, getChunks
+    from imports.parseShorts import makePreNodes, splice
+
     #filename and graphString are GLOBAL
     #...index.html?filename=whatever
     filename =  document.query.getfirst('filename') or ''
@@ -115,12 +119,7 @@
         document['status'].text = '  saved'
     document['Save'].bind('click', saveFileName)
 
-    from imports.nodeStuff2 import dataAndOptions, getNodes, parseOptions
-    from imports.parseLeft import nodesEdgesOptions
-    from imports.parseShorts import makePreNodes, splice
-    #from imports.splice import splice
-
-    options = { "physics"  :{"enabled":True},
+    defaultOptions = { "physics"  :{"enabled":True},
                 "configure":{"enabled":True},
                 "autoResize": True,
                 "layout":{"improvedLayout": True, "hierarchical":{
@@ -163,6 +162,9 @@
         data= dict( nodes = ret['nodes'],
                     edges = ret['edges'])
 
+        #import copy
+        #options = defaultOptions.copy()
+        options = defaultOptions
         for k,v in ret['options'].items(): #augment the default options
             options[k] = v
 
@@ -222,12 +224,17 @@
         #network.on('configChange', configChange)
     document['LEFT'].bind('input',onEdit)
 
+    def optionStrings(graphString):
+        print('optionsStrings')
+        return '\n'+''.join([chunk for chunk in getChunks(graphString) if not chunk.startswith('id')])
 
     def fillLEFT(src):
+        """rewrite global graphString and put it in LEFT"""
         global graphString
-        graphString=src.strip()
+        src=src.strip()
 
-        chunks = graphString.split('\n\n')
+        chunks = src.split('\n\n')
+
         newChunks = []
         for chunk in chunks:
             newChunk=[]
@@ -240,8 +247,7 @@
             newChunk = '\n'.join(newChunk)
             newChunks.append(newChunk)
 
-        graphString = '\n'.join(newChunks)
-        graphString = graphString
+        graphString = '\n'.join(newChunks) + optionStrings(graphString)
         leftEd.setValue(graphString)
     fillLEFT(graphString)
 
