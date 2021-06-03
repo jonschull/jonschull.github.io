@@ -139,7 +139,23 @@
                               "shadow": True
                              }
                  };
+    def networkClick(params): #bound via network.on below
+        #print('networkClick', params.nodes)
+        if params.nodes:
+            ID=params.nodes[0]
+            URL = [node['url'] for node in nodes if node['id'] == ID][0]
+            print('URL', URL)
+            if URL:
+                #document['LEFT'].html = URL; # for a moment,
+                aio.run(showFile(URL))       # until this finishes
 
+    def configChange(ev):
+        global options
+        print('configChange', JSON.stringify(ev))
+        parsed = pythonize(ev) #JSON.parse(JSON.stringify(ev))  #
+        for key in parsed: #there should actually be only one key
+            options[key] = parsed[key]
+            #this updates the global object. getOptions will persist them.
 
     def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
         ret = nodesEdgesOptions(graphString)
@@ -156,21 +172,12 @@
         document['tweaker'].html = ''
         options['configure']['container'] = document['tweaker']
         network = window.vis.Network.new(document['mynetwork'], data, options)
+        network.on('configChange', configChange)
+        network.on("click", networkClick)  #rebuilt network, so rebuild click
         return (data, options, network)
 
-    ### initialize
+    ### initialize for case when no file is pre-specified
     data, options, network = refreshGraph(graphString)
-
-    def networkClick(params): #bound via network.on below
-        #print('networkClick', params.nodes)
-        if params.nodes:
-            ID=params.nodes[0]
-            URL = [node['url'] for node in nodes if node['id'] == ID][0]
-            print('URL', URL)
-            if URL:
-                #document['LEFT'].html = URL; # for a moment,
-                aio.run(showFile(URL))       # until this finishes
-    network.on("click", networkClick);
 
     async def showFile(src): #works locally and via server
         # Text file
@@ -211,8 +218,8 @@
             document['status'].text = 'changed'
         graphString = leftEd.getValue() # document['LEFT'].text
         data, options, network = refreshGraph(graphString)
-        network.on("click", networkClick)  #rebuilt network, so rebuild click
-        network.on('configChange', configChange)
+        #network.on("click", networkClick)  #rebuilt network, so rebuild click
+        #network.on('configChange', configChange)
     document['LEFT'].bind('input',onEdit)
 
 
@@ -271,13 +278,6 @@
         editor.setValue(newSH+'\n\n' + optionsYAML.replace('options:', 'options:\n', 1))
     document['importOptions'].bind('click', importOptions)
 
-    def configChange(ev):
-        global options
-        print('configChange', JSON.stringify(ev))
-        parsed = pythonize(ev) #JSON.parse(JSON.stringify(ev))  #
-        for key in parsed: #there should actually be only one key
-            options[key] = parsed[key]
-            #this updates the global object. getOptions will persist them.
 
     def getOptions(ev=None):
         global data, options, graphString, network
@@ -311,13 +311,15 @@
 
         document['tweaker'].html='clear'
         data, options, network = refreshGraph(graphString, modifiedOptions=options, modifiedData=data) #this will update options
-        #print('physics', options['physics'])
+
         if ev.target.id == 'loadPositions':
             loadPositions(ev)
             network.fit()
 
-        network.on('configChange', configChange)
-        network.on("click", networkClick)  #rebuilt network, so rebuild click
+        #here...does refreshGraph do this anyway? no
+        #who else does this?
+        #network.on('configChange', configChange)
+        #network.on("click", networkClick)  #rebuilt network, so rebuild click
 
     def loadPositions(ev):
         nodes = pythonize(data['nodes'].get())
