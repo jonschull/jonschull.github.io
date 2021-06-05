@@ -157,15 +157,15 @@
             #this updates the global object. getOptions will persist them.
 
     def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
-        ret = nodesEdgesOptions(graphString)
+        nodes, edges, options = nodesEdgesOptions(graphString)
 
-        data= dict( nodes = ret['nodes'],
-                    edges = ret['edges'])
+        data= dict( nodes = nodes,
+                    edges = edges)
 
         #import copy
         #options = defaultOptions.copy()
         options = defaultOptions
-        for k,v in ret['options'].items(): #augment the default options
+        for k,v in options.items(): #augment the default options
             options[k] = v
 
         data['nodes'] = window.vis.DataSet.new(data['nodes'])
@@ -194,6 +194,12 @@
 
     def makeGraphString(shortStrings):
         preNodes = makePreNodes(shortStrings)
+
+        for i, preNode in enumerate(preNodes):
+            if not preNode['linkto']:
+                preNode.pop('linkto')
+
+        #print('preNodes', preNodes)
         newLines= splice(preNodes,priorNodes = pythonize(data['nodes'].get()))
         return '\n'.join(newLines)
 
@@ -226,7 +232,8 @@
 
     def optionStrings(graphString):
         print('optionsStrings')
-        return '\n'+''.join([chunk for chunk in getChunks(graphString) if not chunk.startswith('id')])
+        #return '\n'+''.join([chunk for chunk in getChunks(graphString) if not chunk.startswith('id')])
+        return '\n\ngraphStrings go here'
 
     def fillLEFT(src):
         """rewrite global graphString and put it in LEFT"""
@@ -247,7 +254,7 @@
             newChunk = '\n'.join(newChunk)
             newChunks.append(newChunk)
 
-        graphString = '\n'.join(newChunks) + optionStrings(graphString)
+        graphString = '\n'.join(newChunks)#:b + optionStrings(graphString)
         leftEd.setValue(graphString)
     fillLEFT(graphString)
 
