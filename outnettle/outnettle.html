@@ -198,8 +198,13 @@
     def pythonize(ev):
         return JSON.parse(JSON.stringify(ev))
 
+
     def makeGraphString(shortStrings):
         preNodes = makePreNodes(shortStrings)
+        try:
+            defaults = '\n\ndefaults ' + leftEd.getValue().split('defaults',1)[1]
+        except IndexError:
+            defaults = ''
 
         for i, preNode in enumerate(preNodes):
             if not preNode['linkto']:
@@ -207,7 +212,7 @@
 
         #print('preNodes', preNodes)
         newLines= splice(preNodes,priorNodes = pythonize(data['nodes'].get()))
-        return '\n'.join(newLines)
+        return '\n'.join(newLines) + defaults
 
     lastKeyStroke=0
     def onShortHands(ev, FORCE=True):
@@ -237,7 +242,7 @@
     document['LEFT'].bind('input',onEdit)
 
     def optionStrings(graphString):
-        print('optionsStrings')
+        #print('optionsStrings')
         #return '\n'+''.join([chunk for chunk in getChunks(graphString) if not chunk.startswith('id')])
         return '\n\ngraphStrings go here'
 

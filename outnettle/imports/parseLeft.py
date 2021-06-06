@@ -300,7 +300,7 @@ def optionsFromOptionLines(optionLines):
     for optionLine in optionLines:
         optionSet={}
         phrases = optionLine.split('\n')
-        if len(phrases)<2: 
+        if len(phrases[0].split(' '))<2: 
             return
         kind = phrases.pop(0).split(' ')[1] #presumes two words; keep 'edge' discard 'default' 
 
@@ -309,8 +309,6 @@ def optionsFromOptionLines(optionLines):
                 optionSet = merge(optionSet, (makeOpt(phrase)))
 
         options[kind] = optionSet
-        if options: 
-            print(options)
     return options
 optionsFromOptionLines(optionLines)
 
