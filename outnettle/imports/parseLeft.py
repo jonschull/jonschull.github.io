@@ -292,26 +292,25 @@ nodes
 nodesFromNodeLines(['id Welcome\n\t label test'])
 
 
-# In[11]:
+# In[8]:
 
 
 def optionsFromOptionLines(optionLines):
     options = {}
     for optionLine in optionLines:
         optionSet={}
-        print('optionLine', optionLine)
         phrases = optionLine.split('\n')
         if len(phrases)<2: 
-            print(optionLine)
             return
         kind = phrases.pop(0).split(' ')[1] #presumes two words; keep 'edge' discard 'default' 
 
         for phrase in phrases:
-            if phrase.strip():
-                print('PHRASE', phrase)
+            if len(phrase.split(' '))>1: #will fail
                 optionSet = merge(optionSet, (makeOpt(phrase)))
 
         options[kind] = optionSet
+        if options: 
+            print(options)
     return options
 optionsFromOptionLines(optionLines)
 

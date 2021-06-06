@@ -158,21 +158,27 @@
 
     def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
         nodes, edges, options = nodesEdgesOptions(graphString)
+        #print('RG options',options)
 
         data= dict( nodes = nodes,
                     edges = edges)
 
         #import copy
         #options = defaultOptions.copy()
-        options = defaultOptions
         for k,v in options.items(): #augment the default options
-            options[k] = v
+            defaultOptions[k] = v
+
+        options=defaultOptions
 
         data['nodes'] = window.vis.DataSet.new(data['nodes'])
         data['edges'] = window.vis.DataSet.new(data['edges'])
 
         document['tweaker'].html = ''
         options['configure']['container'] = document['tweaker']
+        #print('optionKeys', options.keys())
+        #print('RG2 options',options)
+
+
         network = window.vis.Network.new(document['mynetwork'], data, options)
         network.on('configChange', configChange)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
