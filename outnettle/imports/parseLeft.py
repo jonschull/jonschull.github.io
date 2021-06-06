@@ -278,7 +278,10 @@ def nodesFromNodeLines(nodeLines):
                 if phrase.strip().startswith('linkto'):
                     node['linkto'] = phrase.replace('linkto','').strip() #linkto a b c should not be makeOpted
                 else:
-                    node = merge(node, makeOpt(phrase))
+                    try:
+                        node = merge(node, makeOpt(phrase))
+                    except:
+                        print(phrase)
         nodes.append(node)
     return nodes # finito!
 
@@ -301,12 +304,16 @@ def optionsFromOptionLines(optionLines):
         optionSet={}
         phrases = optionLine.split('\n')
         if len(phrases[0].split(' '))<2: 
-            return
-        kind = phrases.pop(0).split(' ')[1] #presumes two words; keep 'edge' discard 'default' 
+            return {}
+        kind = phrases.pop(0).split(' ')[1].strip() #presumes two words; keep 'edge' discard 'default' 
 
         for phrase in phrases:
             if len(phrase.split(' '))>1: #will fail
-                optionSet = merge(optionSet, (makeOpt(phrase)))
+                try:
+                    optionSet = merge(optionSet, (makeOpt(phrase)))
+                except:
+                    return {}
+                    
 
         options[kind] = optionSet
     return options

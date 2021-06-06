@@ -96,7 +96,7 @@
             print([key for key in storage if not key.endswith('.short')])
             return
 
-        graphString = storage[filename]
+        graphString = storage[filename].replace('  ', ' ')  #default  nodes -> default nodes
         leftEd.setValue(graphString)
         #leftEd.getSession().foldAll()
 
@@ -163,8 +163,6 @@
         data= dict( nodes = nodes,
                     edges = edges)
 
-        #import copy
-        #options = defaultOptions.copy()
         for k,v in options.items(): #augment the default options
             defaultOptions[k] = v
 
@@ -241,11 +239,6 @@
         #network.on('configChange', configChange)
     document['LEFT'].bind('input',onEdit)
 
-    def optionStrings(graphString):
-        #print('optionsStrings')
-        #return '\n'+''.join([chunk for chunk in getChunks(graphString) if not chunk.startswith('id')])
-        return '\n\ngraphStrings go here'
-
     def fillLEFT(src):
         """rewrite global graphString and put it in LEFT"""
         global graphString
@@ -265,7 +258,7 @@
             newChunk = '\n'.join(newChunk)
             newChunks.append(newChunk)
 
-        graphString = '\n'.join(newChunks)#:b + optionStrings(graphString)
+        graphString = '\n'.join(newChunks).replace('  ', ' ') #defaults  nodes -> defaults nodes
         leftEd.setValue(graphString)
     fillLEFT(graphString)
 
