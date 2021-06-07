@@ -281,7 +281,7 @@ def nodesFromNodeLines(nodeLines):
                     try:
                         node = merge(node, makeOpt(phrase))
                     except:
-                        print(phrase)
+                        print('?'+phrase)
         nodes.append(node)
     return nodes # finito!
 
@@ -312,6 +312,7 @@ def optionsFromOptionLines(optionLines):
                 try:
                     optionSet = merge(optionSet, (makeOpt(phrase)))
                 except:
+                    print('.'+phrase,end='')
                     return {}
                     
 

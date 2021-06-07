@@ -125,13 +125,13 @@ def makePreNodes(shortStrings=shortStrings):
 makePreNodes()
 
 
-# In[9]:
+# In[11]:
 
 
-def niceRep(preNode, goodKeys = 'id label linkto color font'.split(' ')):
+def niceRep(preNode, goodKeys = 'id label linkto parent addenda'.split(' ')):
     ret=[]
     for k,v in preNode.items():
-        if k in goodKeys:
+        if True:#k in goodKeys #test
             if type(v)==type({}):
                 for k2,v in v.items():
                     ret.append(f'{k} {k2} {v}')
@@ -156,9 +156,20 @@ id b
 # In[7]:
 
 
+def niceReps(mergedNodes):
+    newLines=[]
+    for mergedNode in mergedNodes:
+        newLine = niceRep(mergedNode, goodKeys='id label linkto title color borderWidth shape font background x y'.split(' '))
+        newLine= newLine.replace('/','\n')
+        newLines.append(newLine)
+    return newLines
+
+
+# In[8]:
+
+
 def splice(preNodes, priorNodes=[]):
     """interweave nodes and preNodes before sending to fillLeft"""
-    newLines=[]
     newNodes=preNodes
     mergedNodes=[]
 
@@ -176,10 +187,7 @@ def splice(preNodes, priorNodes=[]):
     if not oldNodes:
         mergedNodes = oldNodes
 
-    for mergedNode in mergedNodes:
-        newLine = niceRep(mergedNode, goodKeys='id label linkto title color borderWidth shape font background'.split(' '))
-        newLine= newLine.replace('/','\n')
-        newLines.append(newLine)
+    newLines = niceReps(mergedNodes)
     return newLines
 
 
@@ -189,7 +197,7 @@ def splice(preNodes, priorNodes=[]):
 
 
 
-# In[8]:
+# In[9]:
 
 
 import subprocess

@@ -18,7 +18,7 @@
 
     from imports.nodeStuff2 import dataAndOptions, getNodes, parseOptions
     from imports.parseLeft import nodesEdgesOptions, getChunks
-    from imports.parseShorts import makePreNodes, splice
+    from imports.parseShorts import makePreNodes, splice, niceReps
 
     #filename and graphString are GLOBAL
     #...index.html?filename=whatever
@@ -196,19 +196,22 @@
     def pythonize(ev):
         return JSON.parse(JSON.stringify(ev))
 
-
-    def makeGraphString(shortStrings):
-        preNodes = makePreNodes(shortStrings)
+    def defaultsFromLeftEd():
         try:
             defaults = '\n\ndefaults ' + leftEd.getValue().split('defaults',1)[1]
         except IndexError:
             defaults = ''
+        return defaults
+
+    def makeGraphString(shortStrings):
+        preNodes = makePreNodes(shortStrings)
+        defaults = defaultsFromLeftEd()
 
         for i, preNode in enumerate(preNodes):
             if not preNode['linkto']:
                 preNode.pop('linkto')
 
-        #print('preNodes', preNodes)
+
         newLines= splice(preNodes,priorNodes = pythonize(data['nodes'].get()))
         return '\n'.join(newLines) + defaults
 
@@ -309,20 +312,17 @@
                 options['configure']['enabled']=True
                 options['configure']['filter'] = ev.target.id
 
-            if ev.target.id == 'storePositions':
+            if ev.target.id == 'storePositions': ##this trounces existing FIX
                 parsed = pythonize(network.getPositions())# JSON.parse(JSON.stringify( network.getPositions()))
                 nodes=pythonize(data['nodes'].get())
                 for i,node in enumerate(nodes):
                     id = node['id']
-                    node['x'] = parsed[id]['x']
-                    node['y'] = parsed[id]['y']
-                lines=[]
-                for N in nodes:
-                    for k,v in N.items():
-                        if v:
-                            lines.append((k.upper() +' '+ str(v)))
-                    lines.append('\n')
-                fillLEFT('\n'.join(lines))
+                    nodes[i]['x'] = parsed[id]['x']
+                    nodes[i]['y'] = parsed[id]['y']
+                lines = niceReps(nodes)
+                print('defaultsFromLeftEd()',defaultsFromLeftEd())
+                fillLEFT('\n'.join(lines) + defaultsFromLeftEd() )
+
                 network.storePositions() #This is needed.  (but why?)
                 #options['manipulation']= { 'enabled': true } #this turns on interactive editing
 
