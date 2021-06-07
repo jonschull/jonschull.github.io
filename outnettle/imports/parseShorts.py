@@ -125,13 +125,13 @@ def makePreNodes(shortStrings=shortStrings):
 makePreNodes()
 
 
-# In[11]:
+# In[5]:
 
 
 def niceRep(preNode, goodKeys = 'id label linkto parent addenda'.split(' ')):
     ret=[]
     for k,v in preNode.items():
-        if True:#k in goodKeys #test
+        if k in goodKeys: #this is needed for filtering preNodes
             if type(v)==type({}):
                 for k2,v in v.items():
                     ret.append(f'{k} {k2} {v}')
