@@ -5,7 +5,7 @@
 
 
 graphString="""id a
-	label a
+	label a multi word label
 	linkto b
     linkto c
     linkto d
@@ -198,7 +198,7 @@ if TESTING:
 
 
 graphString="""id a
-	label a
+	label a multi word label /more than one line
 	linkto  b
 id b
 	label b
@@ -232,6 +232,7 @@ def getChunks(graphString=graphString):
             if line[0] in string.ascii_letters: 
                 lines[i] = '@@' + line
 
+                
     #rejoin them 
     withBreaks = '\n'.join(lines)
     splitAtBreaks =  withBreaks.split('@@')
@@ -241,13 +242,13 @@ def getChunks(graphString=graphString):
 getChunks()
 
 
-# In[ ]:
-
-
-
-
-
 # In[5]:
+
+
+print(getChunks()[0])
+
+
+# In[6]:
 
 
 def classify(chunks):
@@ -265,7 +266,7 @@ nodeLines, optionLines = classify(getChunks())
 nodeLines, optionLines
 
 
-# In[6]:
+# In[7]:
 
 
 def nodesFromNodeLines(nodeLines):
@@ -274,9 +275,12 @@ def nodesFromNodeLines(nodeLines):
     for nodeLine in nodeLines: 
         node = {}
         for phrase in nodeLine.split('\n'):
-            if phrase.strip():
-                if phrase.strip().startswith('linkto'):
+            phraseStripped = phrase.strip()
+            if phraseStripped:
+                if phraseStripped.startswith('linkto'):
                     node['linkto'] = phrase.replace('linkto','').strip() #linkto a b c should not be makeOpted
+                elif phraseStripped.startswith('label '):
+                    node['label']=phraseStripped.split('label ',1)[1].replace('/','\n')
                 else:
                     try:
                         node = merge(node, makeOpt(phrase))
@@ -289,13 +293,13 @@ nodes = nodesFromNodeLines(nodeLines)
 nodes
 
 
-# In[7]:
+# In[8]:
 
 
 nodesFromNodeLines(['id Welcome\n\t label test'])
 
 
-# In[8]:
+# In[9]:
 
 
 def optionsFromOptionLines(optionLines):
@@ -321,7 +325,7 @@ def optionsFromOptionLines(optionLines):
 optionsFromOptionLines(optionLines)
 
 
-# In[9]:
+# In[10]:
 
 
 def nodesEdgesOptions(graphString=graphString):
@@ -344,7 +348,7 @@ def nodesEdgesOptions(graphString=graphString):
 nodesEdgesOptions()
 
 
-# In[10]:
+# In[11]:
 
 
 import subprocess

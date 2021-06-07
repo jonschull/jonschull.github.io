@@ -37,7 +37,7 @@ def assignID(preNode,line,lineID, addenda, assignedIDs):
             if lineID==-1 or (lineID in assignedIDs):
                 lineID = list(IDs - assignedIDs)[0]
         # use lineID
-        preNode['id']= lineID
+        preNode['id']= str(lineID)
         assignedIDs.add(lineID)
         return preNode, assignedIDs
 
