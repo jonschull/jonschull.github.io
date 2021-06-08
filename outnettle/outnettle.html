@@ -93,7 +93,16 @@
         filename = document['filename'].value
         if not filename or not (filename in storage):
             print('AVAILABLE FILES')
-            print([key for key in storage if not key.endswith('.short')])
+            filenames = [key for key in storage if not key.endswith('.short')]
+            printStr= ''
+            lenCtr = 0
+            for filename in filenames:
+                printStr += filename + ' '
+                lenCtr += len(filename) + 1
+                if lenCtr > 100:
+                    printStr += '\n'
+                    lenCtr = 0
+            print(printStr)
             return
 
         graphString = storage[filename].replace('  ', ' ')  #default  nodes -> default nodes
