@@ -168,9 +168,15 @@
 
         options=defaultOptions
 
+        #coerce IDs to string:
         for i in range(len(data['nodes'])):
             data['nodes'][i]['id']=str(data['nodes'][i]['id'])
-            
+
+        for i in range(len(data['edges'])):
+            data['edges'][i]['from'] = str(data['edges'][i]['from'])
+            data['edges'][i]['to'] = str(data['edges'][i]['to'])
+
+
         data['nodes'] = window.vis.DataSet.new(data['nodes'])
         data['edges'] = window.vis.DataSet.new(data['edges'])
 
