@@ -168,6 +168,9 @@
 
         options=defaultOptions
 
+        for i in range(len(data['nodes'])):
+            data['nodes'][i]['id']=str(data['nodes'][i]['id'])
+            
         data['nodes'] = window.vis.DataSet.new(data['nodes'])
         data['edges'] = window.vis.DataSet.new(data['edges'])
 
@@ -351,8 +354,12 @@
         print('doSomething')
         for node in data['nodes'].get():
             print(pythonize(node))
-        for option in options:
-            print(pythonize(options))
+
+        rootREF= window.location.href.split('?')[0]
+        candidates =[key for key in storage if not key.endswith('.short')]
+        for candidate in candidates:
+            document['tweaker'].html = f'<a href={rootREF}?{candidate}>candidate</a>'
+
     document['console'].bind('dblclick', doSomething)
 
     def fit(ev):
