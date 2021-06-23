@@ -5,7 +5,7 @@
 
 
 shortStrings = """test
-	one 
+	one
 	two
 """
 
@@ -34,8 +34,15 @@ def assignID(preNode,line,lineID, addenda, assignedIDs):
             if len(IDfromAddenda)>1:
                 lineID = IDfromAddenda[1].split(' ')[0]
         else:
-            if lineID==-1 or (lineID in assignedIDs):
-                lineID = list(IDs - assignedIDs)[0]
+            if lineID.startswith('~~'):
+                lineID=lineID[2:]
+                i=2
+                candidate = lineID
+                while candidate in assignedIDs:
+                    candidate = lineID + '#' + str(i)
+                    i+=1
+                lineID=candidate
+
         # use lineID
         preNode['id']= str(lineID)
         assignedIDs.add(lineID)
@@ -82,10 +89,10 @@ def makePreNodes(shortStrings=shortStrings):
             linkto=''
 
         words = line.strip().split(' ')
-        if len(words) == 1: #one word Labels become IDs
-            lineID = words[0].strip()
-        else:
-            lineID = -1
+        lineID = words[0].strip()
+        print('lineID', lineID, 'lenWords', len(words))
+        if len(words) > 1:
+            lineID = '~~' + lineID
             #preNode['ADDENDA']= '/ID ' + lineID
 
         #### use line and components carefully
@@ -119,7 +126,7 @@ def makePreNodes(shortStrings=shortStrings):
             newPreNode['id']=ID
             newPreNode['label']= ID
             preNodes.append(newPreNode)
-                         
+
     return preNodes
 
 makePreNodes()
@@ -207,7 +214,3 @@ if subprocess.run.__doc__:
 
 
 # In[ ]:
-
-
-
-
