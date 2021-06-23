@@ -49,7 +49,10 @@
                                 + INPUT(filename, id='filename', value=filename)
                                 + BUTTON('Save', id='Save')
                                 + SPAN(id='status')
-                                + BUTTON('Load', id='Load') )
+                                + BUTTON('Load', id='Load')
+                                + BR()
+                                + BUTTON(IMG(id='collapse', src='collapseIcon.jpg', height='20px', width='20px'), id='collapseButton')
+                              )
                             +TH(BUTTON('center', id='Center')
                                 +'Diagram'
                                 +BR()
@@ -73,6 +76,19 @@
 
                     Class='table-scroll')
 
+    collapsed=False
+    def collapse(ev):
+      global collapsed
+      if not collapsed:
+        leftEd.getSession().foldAll()
+        collapsed=True
+        document['collapse'].src='expandIcon.jpg'
+      else:
+        leftEd.getSession().unfold()
+        collapsed=False
+        document['collapse'].src='collapseIcon.jpg'
+    document['collapseButton'].bind('click', collapse)
+
     def makeEditors(editorNames = ['SHORTHANDS']):
         """return a list of editors corresponding to the names"""
         editors=[]
@@ -89,7 +105,7 @@
     editor, leftEd = makeEditors(['SHORTHANDS', 'LEFT'])
 
     def loadFileName(ev):
-        global filename
+        global filename, collapsed
         filename = document['filename'].value
         if not filename or not (filename in storage):
             print('AVAILABLE FILES')
@@ -107,7 +123,8 @@
 
         graphString = storage[filename].replace('  ', ' ')  #default  nodes -> default nodes
         leftEd.setValue(graphString)
-        #leftEd.getSession().foldAll()
+        #print(graphString)
+
 
         if filename + '.short' in storage:
             shortHands= storage[filename + '.short']
@@ -115,6 +132,9 @@
 
         document['status'].text = '  loaded'
         onEdit(ev,loading=True)
+        document['collapse'].src='collapseIcon.jpg'
+        collapsed=False
+
     document['Load'].bind('click', loadFileName)
 
     def saveFileName(ev):
@@ -159,15 +179,26 @@
 
     def configChange(ev):
         global options
-        print('configChange', JSON.stringify(ev))
-        parsed = pythonize(ev) #JSON.parse(JSON.stringify(ev))  #
+        parsed = pythonize(ev)
+
+        preamble, amble = list(parsed.items())[0]
+        ambleKey, ambleValue = list(amble.items())[0]
+        if type(ambleValue) == type({}):
+          k,v = list(ambleValue.items())[0]
+          ambleValue = f'{k} {v}'
+        print(f'[temporary]\ndefaults {preamble} \n\t {ambleKey} {ambleValue} ')
+
         for key in parsed: #there should actually be only one key
             options[key] = parsed[key]
             #this updates the global object. getOptions will persist them.
 
+    def dragEnd(ev):
+      storePositions(ev)
+
+
     def refreshGraph(graphString='a:b\n',modifiedOptions=None, modifiedData=None):
         nodes, edges, options = nodesEdgesOptions(graphString)
-        #print('RG options',options)
+        options = modifiedOptions or options
 
         data= dict( nodes = nodes,
                     edges = edges)
@@ -191,13 +222,13 @@
 
         document['tweaker'].html = ''
         options['configure']['container'] = document['tweaker']
-        #print('optionKeys', options.keys())
-        #print('RG2 options',options)
 
 
         network = window.vis.Network.new(document['mynetwork'], data, options)
         network.on('configChange', configChange)
         network.on("click", networkClick)  #rebuilt network, so rebuild click
+        network.on('dragEnd', dragEnd)
+        #loadPositions(data)
         return (data, options, network)
 
     ### initialize for case when no file is pre-specified
@@ -216,7 +247,8 @@
 
     def defaultsFromLeftEd():
         try:
-            defaults = '\n\ndefaults ' + leftEd.getValue().split('defaults',1)[1]
+            defaults = leftEd.getValue().split('defaults')[1:]
+            defaults = '\n\ndefaults' + '\ndefaults'.join(defaults)
         except IndexError:
             defaults = ''
         return defaults
@@ -231,6 +263,8 @@
 
 
         newLines= splice(preNodes,priorNodes = pythonize(data['nodes'].get()))
+
+        print('\n'.join(newLines) +  defaults) #at this point newlines are not indented but defaults are
         return '\n'.join(newLines) + defaults
 
     lastKeyStroke=0
@@ -256,8 +290,7 @@
             document['status'].text = 'changed'
         graphString = leftEd.getValue() # document['LEFT'].text
         data, options, network = refreshGraph(graphString)
-        #network.on("click", networkClick)  #rebuilt network, so rebuild click
-        #network.on('configChange', configChange)
+        loadPositions(data)
     document['LEFT'].bind('input',onEdit)
 
     def fillLEFT(src):
@@ -292,30 +325,22 @@
         optionsYAML = yamlizeOptions()
         pythonized = pythonize(window.jsyaml.load(optionsYAML))
         print('test parse', pythonized)
-
-        import collections
-        from functools import reduce
-
-        def flatten(d, parent_key='', sep='_'):
-            items = []
-            for k, v in d.items():
-                new_key = parent_key + sep + k if parent_key else k
-                if isinstance(v, collections.MutableMapping):
-                    items.extend(flatten(v, new_key, sep=sep).items())
-                else:
-                    items.append((new_key, v))
-            return dict(items)
-
-        print('\nflattened')
-        for item in flatten(pythonized).items():
-            print(item)
-
         optionsYAML = 'options:  ' + '\n  '.join(optionsYAML.split('\n'))
         #print('OY', optionsYAML)
         newSH = editor.getValue().split('\noptions:')[0] #remove old options
         editor.setValue(newSH+'\n\n' + optionsYAML.replace('options:', 'options:\n', 1))
     document['importOptions'].bind('click', importOptions)
 
+    def storePositions(ev):
+        parsed = pythonize(network.getPositions())# JSON.parse(JSON.stringify( network.getPositions()))
+        nodes=pythonize(data['nodes'].get())
+        for i,node in enumerate(nodes):
+            id = node['id']
+            nodes[i]['x'] = parsed[id]['x']
+            nodes[i]['y'] = parsed[id]['y']
+        lines = niceReps(nodes)
+        fillLEFT('\n'.join(lines) + defaultsFromLeftEd() )
+        network.storePositions() #This is needed.  (but why?)
 
     def getOptions(ev=None):
         global data, options, graphString, network
@@ -330,35 +355,18 @@
                 options['configure']['enabled']=True
                 options['configure']['filter'] = ev.target.id
 
-            if ev.target.id == 'storePositions': ##this trounces existing FIX
-                parsed = pythonize(network.getPositions())# JSON.parse(JSON.stringify( network.getPositions()))
-                nodes=pythonize(data['nodes'].get())
-                for i,node in enumerate(nodes):
-                    id = node['id']
-                    nodes[i]['x'] = parsed[id]['x']
-                    nodes[i]['y'] = parsed[id]['y']
-                lines = niceReps(nodes)
-                print('defaultsFromLeftEd()',defaultsFromLeftEd())
-                fillLEFT('\n'.join(lines) + defaultsFromLeftEd() )
-
-                network.storePositions() #This is needed.  (but why?)
-                #options['manipulation']= { 'enabled': true } #this turns on interactive editing
+            if ev.target.id == 'storePositions':
+                storePositions(ev)
 
         document['tweaker'].html='clear'
         data, options, network = refreshGraph(graphString, modifiedOptions=options, modifiedData=data) #this will update options
 
         if ev.target.id == 'loadPositions':
-            loadPositions(ev)
-            network.fit()
-
-        #here...does refreshGraph do this anyway? no
-        #who else does this?
-        #network.on('configChange', configChange)
-        #network.on("click", networkClick)  #rebuilt network, so rebuild click
+            loadPositions(data)
+            #network.fit()
 
     def loadPositions(ev):
         nodes = pythonize(data['nodes'].get())
-        print('LPn', nodes)
         for node in nodes:
             data['nodes'].update(node)
         network.fit()
@@ -367,13 +375,15 @@
 
     def doSomething(ev):
         print('doSomething')
-        for node in data['nodes'].get():
-            print(pythonize(node))
+        #for node in data['nodes'].get():
+        #    print(pythonize(node))
 
-        rootREF= window.location.href.split('?')[0]
-        candidates =[key for key in storage if not key.endswith('.short')]
-        for candidate in candidates:
-            document['tweaker'].html = f'<a href={rootREF}?{candidate}>candidate</a>'
+        document['tweaker'].style={'width':100}
+
+        #rootREF= window.location.href.split('?')[0]
+        #candidates =[key for key in storage if not key.endswith('.short')]
+        #for candidate in candidates:
+        #    document['tweaker'].html = f'<a href={rootREF}?{candidate}>candidate</a>'
 
     document['console'].bind('dblclick', doSomething)
 
