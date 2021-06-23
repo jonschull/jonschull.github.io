@@ -143,30 +143,14 @@ def niceRep(preNode, goodKeys = 'id label linkto parent addenda'.split(' ')):
                     ret.append(f'{k} {k2} {v}')
             else:
                 ret.append(f'{k} {v}')
-    return '/' + '  /'.join(ret)
-
-
-# In[6]:
-
-
-"""
-id a
-	label a
-	linkto  b
-	color
-	('border', 'red') ('background', 'lime')
-id b
-	label b"""
-
-
-# In[7]:
+    return '~' + '  ~'.join(ret)
 
 
 def niceReps(mergedNodes):
     newLines=[]
     for mergedNode in mergedNodes:
         newLine = niceRep(mergedNode, goodKeys='id label linkto title color borderWidth shape font background x y'.split(' '))
-        newLine= newLine.replace('/','\n')
+        newLine= newLine.replace('~','\n')
         newLines.append(newLine)
     return newLines
 
