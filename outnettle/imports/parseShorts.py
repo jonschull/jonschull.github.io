@@ -90,7 +90,6 @@ def makePreNodes(shortStrings=shortStrings):
 
         words = line.strip().split(' ')
         lineID = words[0].strip()
-        print('lineID', lineID, 'lenWords', len(words))
         if len(words) > 1:
             lineID = '~~' + lineID
             #preNode['ADDENDA']= '/ID ' + lineID

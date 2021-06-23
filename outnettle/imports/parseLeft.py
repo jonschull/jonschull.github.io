@@ -12,7 +12,7 @@ graphString="""id a
 id b
 	linkto
 	label b
-options 
+options
     nodes
 		color pink
 		color red
@@ -139,13 +139,13 @@ def split(data, value=2):
         head, *tail = data  # This is a nicer way of doing head, tail = data[0], data[1:]
         return {head: split(tail,value)}
     else:
-        return value  
-        # this returns the value to the previous split() 
+        return value
+        # this returns the value to the previous split()
         #    which sets it in the line above by calling itself and returns the datastructure
         #    now that data is None, the complete dataStructure is returned back up through call stack
-        #    to the original call.  
+        #    to the original call.
         # It's way over my head!
-    
+
 
 
 def fixV(s):
@@ -165,7 +165,7 @@ def makeOpt(line = 'nodes color background red'):
     """
     words = line.split()
     value = fixV(words.pop())
-        
+
     return split(words, value)
 
 
@@ -213,7 +213,7 @@ defaults nodes
 		color border red
 		borderWidth 10"""
 
-#note: use of defaults 
+#note: use of defaults
 #note: no blank linktos
 
 
@@ -226,14 +226,14 @@ def getChunks(graphString=graphString):
     break graphString at non-indented lines
     """
     #put break signal in non-indented lines
-    lines=graphString.split('\n') 
+    lines=graphString.split('\n')
     for i,line in enumerate(lines):
         if line.strip():
-            if line[0] in string.ascii_letters: 
+            if line[0] in string.ascii_letters:
                 lines[i] = '@@' + line
 
-                
-    #rejoin them 
+
+    #rejoin them
     withBreaks = '\n'.join(lines)
     splitAtBreaks =  withBreaks.split('@@')
 
@@ -258,7 +258,7 @@ def classify(chunks):
         if chunk.startswith('id'):
             nodeLines.append(chunk)
         else:
-            optionLines.append(chunk)   
+            optionLines.append(chunk)
 
     return nodeLines, optionLines
 
@@ -272,7 +272,7 @@ nodeLines, optionLines
 def nodesFromNodeLines(nodeLines):
     #print('nodeLines in:', nodeLines)
     nodes=[]
-    for nodeLine in nodeLines: 
+    for nodeLine in nodeLines:
         node = {}
         for phrase in nodeLine.split('\n'):
             phraseStripped = phrase.strip()
@@ -285,7 +285,7 @@ def nodesFromNodeLines(nodeLines):
                     try:
                         node = merge(node, makeOpt(phrase))
                     except:
-                        print('?'+phrase)
+                        print('.',end='')
         nodes.append(node)
     return nodes # finito!
 
@@ -307,9 +307,9 @@ def optionsFromOptionLines(optionLines):
     for optionLine in optionLines:
         optionSet={}
         phrases = optionLine.split('\n')
-        if len(phrases[0].split(' '))<2: 
+        if len(phrases[0].split(' '))<2:
             return {}
-        kind = phrases.pop(0).split(' ')[1].strip() #presumes two words; keep 'edge' discard 'default' 
+        kind = phrases.pop(0).split(' ')[1].strip() #presumes two words; keep 'edge' discard 'default'
 
         for phrase in phrases:
             if len(phrase.split(' '))>1: #will fail
@@ -318,7 +318,7 @@ def optionsFromOptionLines(optionLines):
                 except:
                     print('.'+phrase,end='')
                     return {}
-                    
+
 
         options[kind] = optionSet
     return options
@@ -329,10 +329,10 @@ optionsFromOptionLines(optionLines)
 
 
 def nodesEdgesOptions(graphString=graphString):
-    
+
     chunks = getChunks(graphString)
     nodeLines, optionLines = classify(chunks)
-    
+
     nodes    = nodesFromNodeLines( nodeLines )
     options  = optionsFromOptionLines( optionLines)
 
@@ -364,7 +364,3 @@ if subprocess.run.__doc__:
 
 
 # In[ ]:
-
-
-
-

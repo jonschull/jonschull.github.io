@@ -123,7 +123,6 @@
 
         graphString = storage[filename].replace('  ', ' ')  #default  nodes -> default nodes
         leftEd.setValue(graphString)
-        #print(graphString)
 
 
         if filename + '.short' in storage:
@@ -141,7 +140,6 @@
         global filename
         filename = document['filename'].value
         storage[filename] = leftEd.getValue()#  document['LEFT'].text
-        #print('storage',storage[filename])
 
         shortHands = editor.getValue()    ;  storage[filename+'.short'] = shortHands
 
@@ -180,13 +178,14 @@
     def configChange(ev):
         global options
         parsed = pythonize(ev)
+        #print('parsed',parsed)
 
         preamble, amble = list(parsed.items())[0]
         ambleKey, ambleValue = list(amble.items())[0]
         if type(ambleValue) == type({}):
           k,v = list(ambleValue.items())[0]
           ambleValue = f'{k} {v}'
-        print(f'[temporary]\ndefaults {preamble} \n\t {ambleKey} {ambleValue} ')
+        print(f'\n[temporary]\n defaults {preamble} \n\t {ambleKey} {ambleValue} ')
 
         for key in parsed: #there should actually be only one key
             options[key] = parsed[key]
@@ -264,7 +263,7 @@
 
         newLines= splice(preNodes,priorNodes = pythonize(data['nodes'].get()))
 
-        print('\n'.join(newLines) +  defaults) #at this point newlines are not indented but defaults are
+        #print('\n'.join(newLines) +  defaults) #at this point newlines are not indented but defaults are
         return '\n'.join(newLines) + defaults
 
     lastKeyStroke=0
@@ -375,15 +374,7 @@
 
     def doSomething(ev):
         print('doSomething')
-        #for node in data['nodes'].get():
-        #    print(pythonize(node))
-
-        document['tweaker'].style={'width':100}
-
-        #rootREF= window.location.href.split('?')[0]
-        #candidates =[key for key in storage if not key.endswith('.short')]
-        #for candidate in candidates:
-        #    document['tweaker'].html = f'<a href={rootREF}?{candidate}>candidate</a>'
+        document['console'].text = str(options).replace('}','}\n')
 
     document['console'].bind('dblclick', doSomething)
 
