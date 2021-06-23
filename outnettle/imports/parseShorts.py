@@ -76,11 +76,11 @@ def makePreNodes(shortStrings=shortStrings):
         line=preNode['raw']
 
         #### extract components for future use.
-        if '/' in line: #split off addenda
-            line, addenda = line[:line.find('/')], line[line.find('/')+1 :]
-            addenda=addenda.strip()
-        else:
-            addenda = ''
+        #if '/' in line: #split off addenda
+        #    line, addenda = line[:line.find('/')], line[line.find('/')+1 :]
+        #    addenda=addenda.strip()
+        #else:
+        addenda = ''
 
         if ':' in line: #split off linktos
             line, linkto = line[:line.find(':')], line[line.find(':')+1 :]

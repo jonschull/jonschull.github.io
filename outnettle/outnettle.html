@@ -374,7 +374,8 @@
 
     def doSomething(ev):
         print('doSomething')
-        document['console'].text = str(options).replace('}','}\n')
+        #document['console'].text = str(options).replace('}','}\n')
+        print('data[nodes]', pythonize(data['nodes'].get()))
 
     document['console'].bind('dblclick', doSomething)
 

@@ -281,6 +281,8 @@ def nodesFromNodeLines(nodeLines):
                     node['linkto'] = phrase.replace('linkto','').strip() #linkto a b c should not be makeOpted
                 elif phraseStripped.startswith('label '):
                     node['label']=phraseStripped.split('label ',1)[1].replace('/','\n')
+                elif phraseStripped.startswith('title '):
+                    node['title']=phraseStripped.split('title ',1)[1].replace('/','\n')
                 else:
                     try:
                         node = merge(node, makeOpt(phrase))
