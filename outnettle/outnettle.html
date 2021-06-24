@@ -372,10 +372,17 @@
     document['loadPositions'].bind('click', loadPositions)
 
 
+    editor.commands.addCommand(dict(
+        name='Kollapse',
+        bindKey=dict(mac='Shift-Enter'),
+        exec = editor.session.toggleFoldWidget
+        ))
+
     def doSomething(ev):
         print('doSomething')
         #document['console'].text = str(options).replace('}','}\n')
         print('data[nodes]', pythonize(data['nodes'].get()))
+        editor.session.toggleFoldWidget(1, {})
 
     document['console'].bind('dblclick', doSomething)
 
