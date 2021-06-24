@@ -371,10 +371,15 @@
         network.fit()
     document['loadPositions'].bind('click', loadPositions)
 
-
+    #Keybinding for Fold Toggle.  Note that Option-Up moves lines Up, Option-Dn->Dn
+    leftEd.commands.addCommand(dict(
+        name='Kollapse',
+        bindKey=dict(mac='Command-Up', win='Command-Up', ),
+        exec = leftEd.session.toggleFoldWidget
+        ))
     editor.commands.addCommand(dict(
         name='Kollapse',
-        bindKey=dict(mac='Shift-Enter'),
+        bindKey=dict(mac='Command-Up'),
         exec = editor.session.toggleFoldWidget
         ))
 
